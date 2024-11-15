@@ -24,9 +24,9 @@ MethodAnalysis::MethodAnalysis(ExternalMethod *external_method)
     : is_external(true), method_encoded(external_method), basic_blocks(std::make_unique<BasicBlocks>()) {
 }
 
-void MethodAnalysis::dump_dot_file(std::string &file_path) {
+void MethodAnalysis::dump_dot_file(const std::string &file_path) {
     std::ofstream dot_file{file_path};
-
+    assert(dot_file.is_open() && "Dot file needs to be opened");
     dump_method_dot(dot_file);
 }
 
@@ -222,7 +222,8 @@ void MethodAnalysis::create_basic_blocks() {
                 /// we must create an edge because it comes
                 /// from a fallthrough block
                 auto next = internal_disassembler.determine_next(prev->get_terminator(), prev->get_last_address());
-                if (next.size() == 1 && next[0] == start)// it's a fallthrough
+                // TODO: badumbatish: Need Edu for code review here
+                if (next.size() == 1 && !prev->get_terminator()->is_terminator())// it's a fallthrough
                     basic_blocks->add_edge(prev, current);
                 /// in other case, just add the node, and later
                 /// will be added the edge
@@ -241,7 +242,8 @@ void MethodAnalysis::create_basic_blocks() {
         prev = current;
         current = new DVMBasicBlock(disassembled->get_ref_to_instructions(start, end));
         auto next = internal_disassembler.determine_next(prev->get_terminator(), prev->get_last_address());
-        if (next.size() == 1 && next[0] == start)// it's a fallthrough
+        // TODO: badumbatish: Need Edu for code review here
+        if (next.size() == 1 && !prev->get_terminator()->is_terminator())// it's a fallthrough
             basic_blocks->add_edge(prev, current);
         else
             basic_blocks->add_node(current);

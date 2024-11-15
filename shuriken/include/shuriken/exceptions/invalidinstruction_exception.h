@@ -9,6 +9,7 @@
 #ifndef SHURIKENLIB_INVALIDINSTRUCTION_EXCEPTION_H
 #define SHURIKENLIB_INVALIDINSTRUCTION_EXCEPTION_H
 
+#include <cstdint>
 #include <iostream>
 
 namespace exceptions {
@@ -39,6 +40,7 @@ namespace exceptions {
             return _inst_size;
         }
     };
+
 }// namespace exceptions
 
 #endif//SHURIKENLIB_INVALIDINSTRUCTION_EXCEPTION_H

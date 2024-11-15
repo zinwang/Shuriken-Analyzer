@@ -5,9 +5,11 @@
 // @file dex_instructions.cpp
 
 #include "shuriken/disassembler/Dex/dex_instructions.h"
+#include "shuriken/disassembler/Dex/dex_opcodes.h"
 #include "shuriken/exceptions/invalidinstruction_exception.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <sstream>
 
 using namespace shuriken::disassembler::dex;
@@ -252,7 +254,12 @@ std::span<std::uint8_t> Instruction::get_opcodes() {
 }
 
 bool Instruction::is_terminator() {
-    auto operation = opcodes_instruction_operation.at(static_cast<DexOpcodes::opcodes>(op));
+    // INFO: If the op code is not in opcodes_instruction_operation, then it is not terminator
+    const auto dex_op = static_cast<DexOpcodes::opcodes>(op);
+    if (!opcodes_instruction_operation.contains(dex_op)) {
+        return false;
+    }
+    auto operation = opcodes_instruction_operation.at(dex_op);
 
     if (operation == DexOpcodes::operation_type::CONDITIONAL_BRANCH_DVM_OPCODE ||
         operation == DexOpcodes::operation_type::UNCONDITIONAL_BRANCH_DVM_OPCODE ||
@@ -1442,6 +1449,8 @@ Instruction35c::Instruction35c(std::span<uint8_t> bytecode, std::size_t index, s
 
     for (size_t I = 0; I < array_size; ++I)
         registers.push_back(reg[I]);
+
+    if (parser == nullptr) return;
 
     switch (get_kind()) {
         case shuriken::dex::TYPES::kind::TYPE:

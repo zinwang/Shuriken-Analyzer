@@ -18,9 +18,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Wall -Wextra -Werror)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(-Wno-zero-length-array)
+      add_compile_options(-Wno-zero-length-array -Wno-unused-parameter -Wno-unused-function)
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        add_compile_options(-Wno-strict-flex-arrays -Wno-multichar -Wno-dangling-reference -Wno-array-bounds -Wno-stringop-overflow)
+      add_compile_options(-Wno-strict-flex-arrays -Wno-unused-parameter -Wno-unused-function -Wno-multichar -Wno-dangling-reference -Wno-array-bounds -Wno-stringop-overflow)
     endif()
 elseif(MSVC)
         add_compile_options(/W4 /WX /wd4200 /wd4458 /wd4456 /wd4297)
@@ -47,11 +47,17 @@ if(NOT WIN32)
 endif()
 ##############################################################
 
+
+##############################################################
 # options for compilation, Shuriken will be intended to provide the user
 # with the options to compile only part of the project
 option(DEX "Disable the DEX analysis from the library (enable by default)" ON)
 option(DEX_TESTS "Compile all the tests for DEX files" OFF)
 option(SANITIZE "Enable sanitizers for the project" OFF)
+option(MJOLNIR "Enable the compilation of MjolnIR, it needs LLVM and MLIR on the system" OFF)
+
+##############################################################
+
 
 if ((CMAKE_BUILD_TYPE STREQUAL "Debug" ) AND SANITIZE)
     message(STATUS "Debug build")
@@ -142,6 +148,15 @@ target_include_directories(shuriken
         PUBLIC
         "${CMAKE_SOURCE_DIR}/shuriken/include/"
 )
+
+# MJOLNIR 
+#############################################################
+
+if(MJOLNIR)
+    add_subdirectory(mjolnir)
+endif(MJOLNIR)
+
+
 
 
 #############################################################
