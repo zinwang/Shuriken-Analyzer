@@ -1,6 +1,7 @@
 
 #include "transform/lifter.h"
 #include "mjolnir/MjolnIRDialect.h"
+#include "mjolnir/MjolnIROps.h"
 #include "mjolnir/MjolnIRTypes.h"
 #include "shuriken/analysis/Dex/dex_analysis.h"
 #include "shuriken/common/Dex/dvm_types.h"
@@ -25,6 +26,7 @@
 #include <mlir/IR/MLIRContext.h>
 
 #include <iterator>
+#include <mlir/IR/OwningOpRef.h>
 #include <utility>
 
 
@@ -42,21 +44,37 @@ using shuriken::parser::dex::DVMType;
 using shuriken::parser::dex::FUNDAMENTAL;
 using shuriken::parser::dex::fundamental_e;
 using shuriken::parser::dex::ProtoID;
+Lifter::Lifter(const std::string &file_name, bool gen_exception, bool LOGGING)
+    : context(mlir::MLIRContext()), builder(&context), gen_exception(gen_exception), LOGGING(LOGGING) {
+    parser = shuriken::parser::parse_dex(file_name);
+    assert(parser);
+    disassembler = std::make_unique<shuriken::disassembler::dex::DexDisassembler>(parser.get());
+    assert(disassembler);
+    disassembler->disassembly_dex();
+
+    // INFO: xrefs option disabled
+    analysis = std::make_unique<shuriken::analysis::dex::Analysis>(parser.get(), disassembler.get(), false);
+    auto mm = analysis->get_methods();
+    init();
+    mlir_gen_result = mlirGen();
+}
 void Lifter::init() {
+    registry.insert<::mlir::shuriken::MjolnIR::MjolnIRDialect>();
+    context.loadAllAvailableDialects();
     context.getOrLoadDialect<::mlir::shuriken::MjolnIR::MjolnIRDialect>();
     context.getOrLoadDialect<::mlir::cf::ControlFlowDialect>();
     context.getOrLoadDialect<::mlir::arith::ArithDialect>();
     context.getOrLoadDialect<::mlir::func::FuncDialect>();
 
     voidType = ::mlir::shuriken::MjolnIR::DVMVoidType::get(&context);
-    byteType = ::mlir::shuriken::MjolnIR::DVMByteType::get(&context);
-    boolType = ::mlir::shuriken::MjolnIR::DVMBoolType::get(&context);
-    charType = ::mlir::shuriken::MjolnIR::DVMCharType::get(&context);
-    shortType = ::mlir::shuriken::MjolnIR::DVMShortType::get(&context);
-    intType = ::mlir::shuriken::MjolnIR::DVMIntType::get(&context);
-    longType = ::mlir::shuriken::MjolnIR::DVMLongType::get(&context);
-    floatType = ::mlir::shuriken::MjolnIR::DVMFloatType::get(&context);
-    doubleType = ::mlir::shuriken::MjolnIR::DVMDoubleType::get(&context);
+    byteType = ::mlir::IntegerType::get(&context, 8, mlir::IntegerType::Signed);// signed at default
+    boolType = ::mlir::IntegerType::get(&context, 1, mlir::IntegerType::Signless);
+    charType = ::mlir::IntegerType::get(&context, 8, mlir::IntegerType::Signed);
+    shortType = ::mlir::IntegerType::get(&context, 16, mlir::IntegerType::Signed);
+    intType = ::mlir::IntegerType::get(&context, 32, mlir::IntegerType::Signed);
+    longType = ::mlir::IntegerType::get(&context, 64, mlir::IntegerType::Signed);
+    floatType = ::mlir::Float32Type::get(&context);
+    doubleType = ::mlir::Float64Type::get(&context);
     strObjectType = ::mlir::shuriken::MjolnIR::DVMObjectType::get(&context, "Ljava/lang/String;");
 }
 
@@ -166,6 +184,10 @@ llvm::SmallVector<mlir::Type> Lifter::gen_prototype(ProtoID *proto, bool is_stat
     return methodOp;
 }
 
+
+/// INFO: Algorithm from Braun et al.
+/// If we cant read the variable's ssa value from our own block (readVariable)
+///   then we recursively read our own block's predecessors.
 mlir::Value Lifter::readVariableRecursive(analysis::dex::DVMBasicBlock *BB,
                                           analysis::dex::BasicBlocks *BBs,
                                           std::uint32_t Reg) {
@@ -195,7 +217,8 @@ mlir::Value Lifter::readVariableRecursive(analysis::dex::DVMBasicBlock *BB,
 
     return new_value;
 }
-
+/// INFO: First level in the lifting process, we create a MethodOp (with get_method()) as well as
+///   map out all of DVMBasicBlock to their respective Block.
 void Lifter::gen_method(MethodAnalysis *method) {
     /// create the method
     auto function = get_method(method);
@@ -230,16 +253,16 @@ void Lifter::gen_method(MethodAnalysis *method) {
         gen_block(bb);
     }
 
-    for (auto it = bb_nodes.begin(); it != bb_nodes.end(); it++) {
-        // TODO: Need Edu for code review
-        auto bb = *it;
-        // if (it == bb_nodes.begin() || it == std::prev(bb_nodes.end()))
-        //     continue;
-
+    for (auto bb: bb_nodes)
         gen_terminators(bb);
-    }
 }
 
+/// INFO: Generate an mlir basic block full with the transform instruction
+/// Setting current_basic_block to bb allows the builder in gen_instruction to insert the
+///   transformed instruction to the correct basic block.
+/// Setting CurrentDef[bb].Filled to 1 since we've filled the block (except for its terminator)
+///
+/// INFO: Filling the block (CurrentDef[bb].Filled) is a necessary condition for readVariableRecursive on a block
 void Lifter::gen_block(analysis::dex::DVMBasicBlock *bb) {
     /// update current basic block
     // this->log(fmt::format("Gen_Block of {}", bb->toString()));
@@ -260,13 +283,17 @@ void Lifter::gen_block(analysis::dex::DVMBasicBlock *bb) {
                 throw e;
             /// if not just create a Nop instruction
             auto Loc = mlir::FileLineColLoc::get(&context, module_name, instr->get_address(), 0);
-            builder.create<::mlir::shuriken::MjolnIR::Nop>(Loc);
+            builder.create<::mlir::shuriken::MjolnIR::Nop>(Loc, e.what());
         }
     }
 
     CurrentDef[bb].Filled = 1;
 }
 
+/// INFO: Function to add terminator to a block,
+/// If the last instruction is naturally a terminator, we generate it like normal
+/// Otherwise, artifically create a FallThrough Op to differentiate itself from a Cond.Br
+/// *** MLIR requires each block to end with a terminator
 void Lifter::gen_terminators(DVMBasicBlock *bb) {
     current_basic_block = bb;
 
@@ -296,28 +323,35 @@ void Lifter::gen_terminators(DVMBasicBlock *bb) {
             throw e;
         /// if not just create a Nop instruction
         auto Loc = mlir::FileLineColLoc::get(&context, module_name, last_instr->get_address(), 0);
-        builder.create<::mlir::shuriken::MjolnIR::Nop>(Loc);
+        builder.create<::mlir::shuriken::MjolnIR::Nop>(Loc, e.what());
     }
 }
 
-mlir::OwningOpRef<mlir::ModuleOp> Lifter::mlirGen(MethodAnalysis *methodAnalysis) {
+/// INFO: Entry point to calling the lifter
+///   It sets the module name to the method name for lowering purposes later, then calls gen_method
+std::vector<mlir::OwningOpRef<mlir::ModuleOp>> Lifter::mlirGen() {
+    auto mm = analysis->get_methods();
     /// create a Module
-    Module = mlir::ModuleOp::create(builder.getUnknownLoc());
+    ///
+    std::vector<mlir::OwningOpRef<mlir::ModuleOp>> result;
+    for (auto &[method_name, method_analysis]: mm) {
+        Module = mlir::ModuleOp::create(builder.getUnknownLoc());
 
-    /// Set the insertion point into the region of the Module
-    builder.setInsertionPointToEnd(Module.getBody());
+        /// Set the insertion point into the region of the Module
+        builder.setInsertionPointToEnd(Module.getBody());
 
-    if (module_name.empty())
-        module_name = methodAnalysis->get_class_name();
+        module_name = method_analysis.get().get_class_name();
 
-    Module.setName(module_name);
+        Module.setName(module_name);
 
-    gen_method(methodAnalysis);
+        gen_method(&method_analysis.get());
+        result.push_back(Module);
+    }
 
-    return Module;
+    return result;
 }
 
-
+/// INFO: Entry point to each instruction transform from DEI to Mjolnir
 void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction *instr) {
     using namespace shuriken::disassembler::dex;
     using shuriken::disassembler::dex::Instruction;
@@ -391,4 +425,16 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction *instr) {
         default:
             throw exceptions::LifterException("MjolnIRLifter::gen_instruction: InstructionType not implemented");
     }
+}
+BasicBlockType Lifter::get_block_type(::mlir::Block *bb) {
+    return this->block_type_map[bb];
+}
+BasicBlockType Lifter::get_block_type(DVMBasicBlock *bb) {
+    return this->block_type_map[this->map_blocks[bb]];
+}
+void Lifter::set_block_type(::mlir::Block *bb, BasicBlockType bt) {
+    this->block_type_map[bb] = bt;
+}
+void Lifter::set_block_type(DVMBasicBlock *bb, BasicBlockType bt) {
+    this->block_type_map[this->map_blocks[bb]] = bt;
 }

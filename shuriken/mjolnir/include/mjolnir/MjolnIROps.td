@@ -21,11 +21,23 @@ include "mlir/Interfaces/CastInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/Interfaces/ControlFlowInterfaces.td"
 
-
 // TODO: Should we restrict AnyType to at least MjolnirType
 
 // TODO: Should we put pure on everything
 
+def DEFAULT_WIDTH :    I32EnumAttrCase<"DEFAULT", 0>;
+def WWIDTH:    I32EnumAttrCase<"WIDE", 1>;
+def OBJECT_WIDTH :    I32EnumAttrCase<"OBJECT", 2>;
+def BOOLEAN_WIDTH :    I32EnumAttrCase<"BOOLEAN", 3>;
+def BYTE_WIDTH :    I32EnumAttrCase<"BYTE", 4>;
+def CHAR_WIDTH :    I32EnumAttrCase<"CHAR",5>;
+def SHORT_WIDTH :    I32EnumAttrCase<"SHORT", 6>;
+def WidthEnum : I32EnumAttr<"WidthEnum", "To simulate stuff like aget-object and aget-short", 
+        [DEFAULT_WIDTH, WWIDTH, OBJECT_WIDTH, BOOLEAN_WIDTH, BYTE_WIDTH, CHAR_WIDTH, SHORT_WIDTH]> {
+  let cppNamespace = "::mlir::shuriken::MjolnIR";
+  let stringToSymbolFnName = "ConvertToEnum";
+  let symbolToStringFnName = "ConvertToString";
+}
 /// Base class for unary operations, we specify just one
 /// argument value as entry, and one value as result
 class MjolnIR_UnaryOpBase<string mnemonic, list<Trait> traits = []> :
@@ -60,6 +72,10 @@ class MjolnIR_BinaryOpBase<string mnemonic, list<Trait> traits = []> :
 
 def MjolnIR_Nop : MjolnIR_Op<"nop", [Pure]>
 {
+    let arguments = (ins
+        StrAttr:$from // called method
+    );
+
     let assemblyFormat = "attr-dict";
 }
 
@@ -138,62 +154,28 @@ def MjolnIR_LoadString : MjolnIR_Op<"load-string", [Pure, ConstantLike]>
 //===----------------------------------------------------------------------===//
 // Binary operations
 //===----------------------------------------------------------------------===//
-def MjolnIR_AddOp : MjolnIR_BinaryOpBase<"add", [Commutative]>
+// Badumbatish: THIS IS EMPTY AS IT IS REPLACED BY MLIR's arith dialect
+
+
+//===----------------------------------------------------------------------===//
+// GetArrayOp
+//===----------------------------------------------------------------------===//
+def GetArrayOp: MjolnIR_Op<"getarray",
+    [Pure]>
 {
-    let summary = "Add two DVM registers";
+    let summary = "Get a value from the array with an index";
+
+
+    let arguments = (ins
+        AnyType :$dvm_array, // class of Array
+        AnyType: $array_index, // reference to Array in Dalvik code
+        WidthEnum : $width
+    );
+
+    let results = (outs
+        DVM_BasicType               // any of the DVM Basic Types
+    );
 }
-
-def MjolnIR_SubOp : MjolnIR_BinaryOpBase<"sub">
-{
-    let summary = "Substract two DVM registers";
-}
-
-def MjolnIR_MulOp : MjolnIR_BinaryOpBase<"mul", [Commutative]>
-{
-    let summary = "Multiply two DVM registers";
-}
-
-def MjolnIR_DivOp : MjolnIR_BinaryOpBase<"div">
-{
-    let summary = "Divide two DVM registers";
-}
-
-def MjolnIR_RemOp : MjolnIR_BinaryOpBase<"rem">
-{
-    let summary = "Divide two DVM registers and get the remainder";
-}
-
-def MjolnIR_AndOp : MjolnIR_BinaryOpBase<"and">
-{
-    let summary = "Apply AND operation in two DVM registers";
-}
-
-def MjolnIR_OrOp  : MjolnIR_BinaryOpBase<"or">
-{
-    let summary = "Apply OR operation in two DVM registers";
-}
-
-def MjolnIR_XorOp : MjolnIR_BinaryOpBase<"xor">
-{
-    let summary = "Apply XOR operation in two DVM registers";
-}
-
-def MjolnIR_Shl   : MjolnIR_BinaryOpBase<"shl">
-{
-    let summary = "Shift Left a DVM register";
-}
-
-def MjolnIR_Shr   : MjolnIR_BinaryOpBase<"shr">
-{
-    let summary = "Shift Right a DVM register";
-}
-
-def MjolnIR_UShr  : MjolnIR_BinaryOpBase<"ushr">
-{
-    let summary = "Unsigned Shift Right a DVM register";
-}
-
-
 //===----------------------------------------------------------------------===//
 // LoadFieldOp
 //===----------------------------------------------------------------------===//

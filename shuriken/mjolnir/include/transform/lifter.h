@@ -13,17 +13,22 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/MLIRContext.h"
+#include "shuriken/analysis/Dex/dex_analysis.h"
 #include "shuriken/disassembler/Dex/dex_opcodes.h"
 #include "shuriken/parser/Dex/dex_fields.h"
 #include "shuriken/parser/Dex/dex_methods.h"
 #include "shuriken/parser/Dex/dex_protos.h"
 #include "shuriken/parser/Dex/dex_types.h"
+#include <mlir/IR/OwningOpRef.h>
+#include <shuriken/parser/shuriken_parsers.h>
 
 
 #include <mlir/Dialect/Arith/IR/Arith.h>
 #include <mlir/Dialect/ControlFlow/IR/ControlFlow.h>
 #include <mlir/Dialect/ControlFlow/IR/ControlFlowOps.h>
 #include <mlir/Dialect/Func/IR/FuncOps.h>
+#include <mlir/IR/Block.h>
+#include <mlir/Support/LLVM.h>
 
 using namespace mlir::shuriken::MjolnIR;
 using shuriken::analysis::dex::BasicBlocks;
@@ -59,6 +64,11 @@ namespace exceptions {
 
 namespace shuriken {
     namespace MjolnIR {
+        enum class BasicBlockType {
+            NormalBlock,
+            TryBlock,
+            CatchBlock
+        };
         class Lifter {
         public:
             using edge_t =
@@ -85,6 +95,9 @@ namespace shuriken {
             /// @brief A map to keep the definitions of variables, and
             /// know if a basic block is completely analyzed
             mlir::DenseMap<shuriken::analysis::dex::DVMBasicBlock *, BasicBlockDef> CurrentDef;
+
+            /// @brief A map to know if a block is a normal, try or catch block
+            mlir::DenseMap<::mlir::Block *, BasicBlockType> block_type_map;
 
             /// @brief Map for the Shuriken basic blocks and the
             /// mlir blocks
@@ -160,7 +173,7 @@ namespace shuriken {
                                               std::uint32_t Reg);
 
             /// @brief Reference to an MLIR Context
-            mlir::MLIRContext &context;
+            mlir::MLIRContext context;
 
             /// @brief Module to return on lifting process
             mlir::ModuleOp Module;
@@ -186,14 +199,14 @@ namespace shuriken {
 
             // types from DVM for not generating it many times
             ::mlir::shuriken::MjolnIR::DVMVoidType voidType;
-            ::mlir::shuriken::MjolnIR::DVMByteType byteType;
-            ::mlir::shuriken::MjolnIR::DVMBoolType boolType;
-            ::mlir::shuriken::MjolnIR::DVMCharType charType;
-            ::mlir::shuriken::MjolnIR::DVMShortType shortType;
-            ::mlir::shuriken::MjolnIR::DVMIntType intType;
-            ::mlir::shuriken::MjolnIR::DVMLongType longType;
-            ::mlir::shuriken::MjolnIR::DVMFloatType floatType;
-            ::mlir::shuriken::MjolnIR::DVMDoubleType doubleType;
+            ::mlir::IntegerType byteType;
+            ::mlir::IntegerType boolType;
+            ::mlir::IntegerType charType;
+            ::mlir::IntegerType shortType;
+            ::mlir::IntegerType intType;
+            ::mlir::IntegerType longType;
+            ::mlir::Float32Type floatType;
+            ::mlir::Float64Type doubleType;
             ::mlir::shuriken::MjolnIR::DVMObjectType strObjectType;
 
 
@@ -203,6 +216,10 @@ namespace shuriken {
             /// @brief Return an mlir::Type from a Fundamental type of Dalvik
             /// @param fundamental fundamental type of Dalvik
             /// @return different type depending on input
+            BasicBlockType get_block_type(::mlir::Block *);
+            BasicBlockType get_block_type(DVMBasicBlock *);
+            void set_block_type(::mlir::Block *, BasicBlockType);
+            void set_block_type(DVMBasicBlock *, BasicBlockType);
             mlir::Type get_type(parser::dex::DVMFundamental *fundamental);
 
             /// @brief Return an mlir::Type from a class type of Dalvik
@@ -312,21 +329,27 @@ namespace shuriken {
                     fmt::print(stderr, "{}", msg);
             }
 
+            mlir::DialectRegistry registry;
+
+
+            std::unique_ptr<shuriken::parser::dex::Parser>
+                    parser;
+            std::unique_ptr<shuriken::disassembler::dex::DexDisassembler> disassembler;
+            std::unique_ptr<shuriken::analysis::dex::Analysis> analysis;
+
+
+            /// @brief Generate a vector of ModuleOp with the lifted instructions from methods from this->analysis
+            /// @return a vector of ModuleOp with the lifted instructions
+            std ::vector<mlir::OwningOpRef<mlir::ModuleOp>>
+            mlirGen();
+
         public:
             /// @brief Constructor of Lifter
             /// @param context context from MjolnIR
             /// @param gen_exception generate a exception or nop instruction
-            Lifter(mlir::MLIRContext &context, bool gen_exception, bool LOGGING)
-                : context(context), builder(&context), gen_exception(gen_exception), LOGGING(LOGGING) {
-                init();
-            }
+            Lifter(const std::string &file_name, bool gen_exception, bool LOGGING);
 
-            /// @brief Generate a ModuleOp with the lifted instructions from a
-            /// MethodAnalysis
-            /// @param methodAnalysis method analysis to lift to MjolnIR
-            /// @return reference to ModuleOp with the lifted instructions
-            mlir::OwningOpRef<mlir::ModuleOp>
-            mlirGen(shuriken::analysis::dex::MethodAnalysis *methodAnalysis);
+            std::vector<mlir::OwningOpRef<mlir::ModuleOp>> mlir_gen_result;
         };
     }// namespace MjolnIR
 }// namespace shuriken
