@@ -6,9 +6,12 @@ on:
   push:
     branches:
       - main  # Replace with your default branch
+      - doxygen_issue
 
 jobs:
   generate-docs:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
 
     steps:
