@@ -36,7 +36,7 @@ def build_libraries():
     # Ensure our build folder exists
     BUILD_FOLDER.mkdir(parents=True, exist_ok=True)
 
-    if platform.system() == 'Linux':
+    if platform.system() == 'Darwin' and platform.system() == 'Linux':
         try:
             with change_directory(BUILD_FOLDER):
                 logger.info("Configuring with CMake...")
@@ -54,7 +54,8 @@ def build_libraries():
             logger.error(f"An error ocurred: {e}")
 
     else:
-        logger.warning("CMake build is only supported on Linux for now.")
+        logger.warning("CMake build is only supported on Linux/MacOS for now.")
+
 
 
 class custom_sdist(_sdist):
