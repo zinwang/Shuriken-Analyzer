@@ -330,21 +330,23 @@ void Lifter::gen_terminators(DVMBasicBlock *bb) {
 /// INFO: Entry point to calling the lifter
 ///   It sets the module name to the method name for lowering purposes later, then calls gen_method
 std::vector<mlir::OwningOpRef<mlir::ModuleOp>> Lifter::mlirGen() {
-    auto mm = analysis->get_methods();
-    /// create a Module
-    ///
+    auto cc = analysis->get_classes();
+
+    /// Create a Module per class
+    /// modules will contain a MethodOp for each method
     std::vector<mlir::OwningOpRef<mlir::ModuleOp>> result;
-    for (auto &[method_name, method_analysis]: mm) {
-        Module = mlir::ModuleOp::create(builder.getUnknownLoc());
+    
+    for (auto &[class_name, class_ref] : cc) {
+        auto Module = mlir::ModuleOp::create(builder.getUnknownLoc());
 
-        /// Set the insertion point into the region of the Module
-        builder.setInsertionPointToEnd(Module.getBody());
+        Module.setName(class_name);
+        
+        for (auto &[method_name, method_analysis] : class_ref.get().get_methods()) {
+            builder.setInsertionPointToEnd(Module.getBody());
 
-        module_name = method_analysis.get().get_class_name();
+            gen_method(method_analysis);
+        }
 
-        Module.setName(module_name);
-
-        gen_method(&method_analysis.get());
         result.push_back(Module);
     }
 
