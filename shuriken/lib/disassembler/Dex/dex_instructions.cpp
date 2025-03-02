@@ -169,19 +169,19 @@ namespace {
         if (std::holds_alternative<std::monostate>(source_id)) {
             instruction_str << " // UNKNOWN@" << iBBBB;
         } else if (std::holds_alternative<shuriken::parser::dex::DVMType *>(source_id)) {
-            auto type = std::get<shuriken::parser::dex::DVMType *>(source_id);
+            auto *type = std::get<shuriken::parser::dex::DVMType *>(source_id);
             instruction_str << type->get_raw_type();
             instruction_str << " // type@" << iBBBB;
         } else if (std::holds_alternative<shuriken::parser::dex::FieldID *>(source_id)) {
-            auto field = std::get<shuriken::parser::dex::FieldID *>(source_id);
+            auto *field = std::get<shuriken::parser::dex::FieldID *>(source_id);
             instruction_str << field->pretty_field();
             instruction_str << " // field@" << iBBBB;
         } else if (std::holds_alternative<shuriken::parser::dex::MethodID *>(source_id)) {
-            auto method = std::get<shuriken::parser::dex::MethodID *>(source_id);
+            auto *method = std::get<shuriken::parser::dex::MethodID *>(source_id);
             instruction_str << method->dalvik_name_format();
             instruction_str << " // method@" << iBBBB;
         } else if (std::holds_alternative<shuriken::parser::dex::ProtoID *>(source_id)) {
-            auto proto = std::get<shuriken::parser::dex::ProtoID *>(source_id);
+            auto *proto = std::get<shuriken::parser::dex::ProtoID *>(source_id);
             instruction_str << proto->get_shorty_idx();
             instruction_str << " // proto@" << iBBBB;
         } else if (std::holds_alternative<std::string_view>(source_id)) {

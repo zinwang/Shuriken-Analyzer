@@ -37,7 +37,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction35c *instr)
 
             mlir::SmallVector<mlir::Value, 4> parameters;
 
-            auto called_method = std::get<MethodID *>(instr->get_value());
+            auto *called_method = std::get<MethodID *>(instr->get_value());
             auto method_name = called_method->get_method_name();
             auto class_name = called_method->get_class()->get_raw_type();
 
@@ -57,7 +57,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction35c *instr)
                 if (I == 0 && op_code != DexOpcodes::opcodes::OP_INVOKE_STATIC)
                     continue;
 
-                auto fundamental = reinterpret_cast<DVMFundamental *>(*(parameters_protos.begin() + P));
+                auto *fundamental = reinterpret_cast<DVMFundamental *>(*(parameters_protos.begin() + P));
 
                 /// if the parameter is a long or a double, skip the second register
                 if (fundamental &&

@@ -213,8 +213,8 @@ void print_classes(shuriken::parser::dex::DexClasses &classes) {
     for (auto &class_def: classes.get_classdefs()) {
         fmt::print("Class #{} data:\n", I++);
 
-        const auto class_idx = class_def.get_class_idx();
-        const auto super_class = class_def.get_superclass();
+        auto *const class_idx = class_def.get_class_idx();
+        auto *const super_class = class_def.get_superclass();
         std::string_view source_file = class_def.get_source_file();
         auto access_flags = class_def.get_access_flags();
 
@@ -243,13 +243,13 @@ void print_classes(shuriken::parser::dex::DexClasses &classes) {
         if (fields) {
             fmt::print(" Static Fields:\n");
             for (size_t j = 0, e = class_data_item.get_number_of_static_fields(); j < e; j++) {
-                auto field = class_data_item.get_static_field_by_id(static_cast<uint32_t>(j));
+                auto *field = class_data_item.get_static_field_by_id(static_cast<uint32_t>(j));
                 print_field(field, j);
             }
 
             fmt::print(" Instance Fields:\n");
             for (size_t j = 0, e = class_data_item.get_number_of_instance_fields(); j < e; j++) {
-                auto field = class_data_item.get_instance_field_by_id(static_cast<uint32_t>(j));
+                auto *field = class_data_item.get_instance_field_by_id(static_cast<uint32_t>(j));
                 print_field(field, j);
             }
         }
@@ -257,20 +257,20 @@ void print_classes(shuriken::parser::dex::DexClasses &classes) {
         if (methods) {
             fmt::print(" Direct Methods:\n");
             for (size_t j = 0, e = class_data_item.get_number_of_direct_methods(); j < e; j++) {
-                auto method = class_data_item.get_direct_method_by_id(static_cast<uint32_t>(j));
+                auto *method = class_data_item.get_direct_method_by_id(static_cast<uint32_t>(j));
                 print_method(method, j);
             }
 
             fmt::print(" Virtual Methods:\n");
             for (size_t j = 0, e = class_data_item.get_number_of_virtual_methods(); j < e; j++) {
-                auto method = class_data_item.get_virtual_method_by_id(static_cast<uint32_t>(j));
+                auto *method = class_data_item.get_virtual_method_by_id(static_cast<uint32_t>(j));
                 print_method(method, j);
             }
         }
 
         if (xrefs) {
             fmt::print(" XREFs\n");
-            auto class_analysis = analysis->get_class_analysis(class_idx->get_class_name().data());
+            auto *class_analysis = analysis->get_class_analysis(class_idx->get_class_name().data());
 
             auto xrefconstclass = class_analysis->get_xrefconstclass();
             fmt::print("  XREF Const Class:\n");
@@ -295,7 +295,7 @@ void print_field(shuriken::parser::dex::EncodedField *field, size_t j) {
                shuriken::dex::Utils::get_types_as_string(field->get_flags()));
     if (xrefs) {
         fmt::print("   XRefs:\n");
-        auto field_analysis = analysis->get_field_analysis(field);
+        auto *field_analysis = analysis->get_field_analysis(field);
         if (field_analysis == nullptr) return;
         auto xref_read = field_analysis->get_xrefread();
         fmt::print("    Xrefs Read:\n");
@@ -316,16 +316,16 @@ void print_field(shuriken::parser::dex::EncodedField *field, size_t j) {
 
 void print_method(shuriken::parser::dex::EncodedMethod *method, size_t j) {
     fmt::print("  Method #{}\n", j);
-    auto method_id = method->getMethodID();
+    auto *method_id = method->getMethodID();
     fmt::print("   Method name:    {}\n", method_id->get_method_name());
     fmt::print("   Prototype:      (");
-    for (auto p: method_id->get_prototype()->get_parameters()) {
+    for (auto *p: method_id->get_prototype()->get_parameters()) {
         fmt::print("{}", p->get_raw_type());
     }
     fmt::print("){}\n", method_id->get_prototype()->get_return_type()->get_raw_type());
     fmt::print("   Access Flags:   0x{:X} ({})\n", static_cast<std::uint32_t>(method->get_flags()),
                shuriken::dex::Utils::get_types_as_string(method->get_flags()));
-    auto code_item_struct = method->get_code_item();
+    auto *code_item_struct = method->get_code_item();
     if (code_item_struct) {
         fmt::print("   Code:           {}\n", "-");
         fmt::print("   Registers:      {}\n", code_item_struct->get_registers_size());
@@ -340,13 +340,13 @@ void print_method(shuriken::parser::dex::EncodedMethod *method, size_t j) {
     }
     if (disassembly) {
         fmt::println("Disassembled method:");
-        auto disassembled_method = disassembler->get_disassembled_method(method_id->dalvik_name_format());
+        auto *disassembled_method = disassembler->get_disassembled_method(method_id->dalvik_name_format());
         if (disassembled_method == nullptr)
             throw std::runtime_error("The method " + std::string(method_id->demangle()) + " was not correctly disassembled");
         fmt::print("{}\n", disassembled_method->print_method());
     }
     if (blocks) {
-        auto method_analysis = analysis->get_method(method);
+        auto *method_analysis = analysis->get_method(method);
         if (method_analysis == nullptr) return;
 
         if (method_analysis) {
@@ -354,7 +354,7 @@ void print_method(shuriken::parser::dex::EncodedMethod *method, size_t j) {
         }
     }
     if (xrefs) {
-        auto method_analysis = analysis->get_method(method);
+        auto *method_analysis = analysis->get_method(method);
         if (method_analysis == nullptr) return;
 
         fmt::print("    XREFs\n");

@@ -75,7 +75,7 @@ void DexDisassembler::disassembly_dex() {
 }
 
 void DexDisassembler::disassemble_encoded_method(shuriken::parser::dex::EncodedMethod *method) {
-    auto code_item_struct = method->get_code_item();
+    auto *code_item_struct = method->get_code_item();
     std::unique_ptr<DisassembledMethod> disassembled_method;
     std::vector<exception_data_t> exceptions_data;
     std::vector<std::unique_ptr<Instruction>> instructions;

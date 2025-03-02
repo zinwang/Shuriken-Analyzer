@@ -122,13 +122,13 @@ void ClassAnalysis::add_field_xref_read(MethodAnalysis *method,
                                                 field,
                                         std::uint64_t off) {
     if (std::holds_alternative<shuriken::parser::dex::EncodedField *>(field)) {
-        auto f = std::get<shuriken::parser::dex::EncodedField *>(field);
+        auto *f = std::get<shuriken::parser::dex::EncodedField *>(field);
         std::string_view name = f->get_field()->pretty_field();
         if (fields.find(name) == fields.end())
             fields.insert({name, std::make_unique<FieldAnalysis>(f)});
         fields[name]->add_xrefread(classobj, method, off);
     } else {
-        auto f = std::get<ExternalField *>(field);
+        auto *f = std::get<ExternalField *>(field);
         std::string_view name = f->pretty_field_name();
         if (fields.find(name) == fields.end())
             fields.insert({name, std::make_unique<FieldAnalysis>(f)});
@@ -143,13 +143,13 @@ void ClassAnalysis::add_field_xref_write(MethodAnalysis *method,
                                                  field,
                                          std::uint64_t off) {
     if (std::holds_alternative<shuriken::parser::dex::EncodedField *>(field)) {
-        auto f = std::get<shuriken::parser::dex::EncodedField *>(field);
+        auto *f = std::get<shuriken::parser::dex::EncodedField *>(field);
         std::string_view name = f->get_field()->pretty_field();
         if (fields.find(name) == fields.end())
             fields.insert({name, std::make_unique<FieldAnalysis>(f)});
         fields[name]->add_xrefwrite(classobj, method, off);
     } else {
-        auto f = std::get<ExternalField *>(field);
+        auto *f = std::get<ExternalField *>(field);
         std::string_view name = f->pretty_field_name();
         if (fields.find(name) == fields.end())
             fields.insert({name, std::make_unique<FieldAnalysis>(f)});

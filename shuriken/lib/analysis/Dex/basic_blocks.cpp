@@ -201,10 +201,9 @@ void BasicBlocks::add_edge(DVMBasicBlock *src, DVMBasicBlock *dst) {
 BasicBlocks::node_type_t BasicBlocks::get_node_type(DVMBasicBlock *node) {
     if (predecessors_[node].size() > 1)
         return JOIN_NODE;
-    else if (successors_[node].size() > 1)
+    if (successors_[node].size() > 1)
         return BRANCH_NODE;
-    else
-        return REGULAR_NODE;
+    return REGULAR_NODE;
 }
 
 void BasicBlocks::remove_node(DVMBasicBlock *node) {
@@ -218,7 +217,7 @@ void BasicBlocks::remove_node(DVMBasicBlock *node) {
 
     if (node_type == JOIN_NODE)// len(predecessors) > 1
     {
-        auto suc = *successors_[node].begin();
+        auto *suc = *successors_[node].begin();
 
         // delete from predecessors of sucessor
         predecessors_[suc].erase(node);
@@ -226,14 +225,14 @@ void BasicBlocks::remove_node(DVMBasicBlock *node) {
         // Cast to void to tell compiler i don't use this value
         static_cast<void>(std::ranges::remove(edges_, std::make_pair(node, suc)));
 
-        for (auto pred: predecessors_[node]) {
+        for (auto *pred: predecessors_[node]) {
             // delete the edge from predecessor to the node
             static_cast<void>(std::ranges::remove(edges_, std::make_pair(pred, node)));
             // delete from successors[pred] the node
             successors_[pred].erase(node);
         }
 
-        for (auto pred: predecessors_[node]) {
+        for (auto *pred: predecessors_[node]) {
             // now add new one with successor
             edges_.emplace_back(pred, suc);
             // add the predecessor of sucesspr
@@ -244,7 +243,7 @@ void BasicBlocks::remove_node(DVMBasicBlock *node) {
         }
     } else if (node_type == BRANCH_NODE)// len(successors) > 1
     {
-        auto pred = *predecessors_[node].begin();
+        auto *pred = *predecessors_[node].begin();
 
         // delete from successors of pred
         successors_[pred].erase(node);
@@ -252,14 +251,14 @@ void BasicBlocks::remove_node(DVMBasicBlock *node) {
         static_cast<void>(std::ranges::remove(edges_, std::make_pair(pred, node)));
 
         // now disconnect the node from the successors
-        for (auto suc: successors_[node]) {
+        for (auto *suc: successors_[node]) {
             // remove the edges node->suc
             static_cast<void>(std::ranges::remove(edges_, std::make_pair(node, suc)));
             // remove the node as predecessor of this successor
             predecessors_[suc].erase(node);
         }
 
-        for (auto suc: successors_[node]) {
+        for (auto *suc: successors_[node]) {
             // add the edges
             edges_.emplace_back(pred, suc);
             // add the predecessor of sucesspr
@@ -279,7 +278,7 @@ void BasicBlocks::remove_node(DVMBasicBlock *node) {
         }
 
         if (successors_[node].size() == 1) {
-            auto suc = *successors_[node].begin();
+            auto *suc = *successors_[node].begin();
 
             // delete from predecessors of sucessor
             predecessors_[suc].erase(node);

@@ -53,7 +53,7 @@ std::string_view MethodID::dalvik_name_format() {
         return dalvik_name;
     dalvik_name = class_->get_raw_type();
     dalvik_name += "->" + std::string(name) + "(";
-    for (const auto proto: protoId->get_parameters())
+    for (auto *const proto: protoId->get_parameters())
         dalvik_name += proto->get_raw_type();
     dalvik_name += ")" + std::string(protoId->get_return_type()->get_raw_type());
     return dalvik_name;

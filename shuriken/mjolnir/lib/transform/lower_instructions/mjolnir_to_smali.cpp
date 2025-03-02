@@ -13,15 +13,20 @@ namespace {
             auto signedness = intType.getSignedness();
             if (width == 1) {
                 return "-boolean";
-            } else if (width == 8 && signedness == mlir::IntegerType::Signed) {
+            }
+            if (width == 8 && signedness == mlir::IntegerType::Signed) {
                 return "-byte";
-            } else if (width == 8 && signedness == mlir::IntegerType::Unsigned) {
+            }
+            if (width == 8 && signedness == mlir::IntegerType::Unsigned) {
                 return "-char";
-            } else if (width == 16) {
+            }
+            if (width == 16) {
                 return "-short";
-            } else if (width == 32) {
+            }
+            if (width == 32) {
                 return "";
-            } else if (width == 64) {
+            }
+            if (width == 64) {
                 return "-wide";
             }
         }
@@ -52,36 +57,41 @@ namespace {
             unsigned width = intType.getWidth();
             auto signedness = intType.getSignedness();
             if (width == 1) {
-                return "Z";  // boolean
-            } else if (width == 8 && signedness == mlir::IntegerType::Signed) {
-                return "B";  // byte
-            } else if (width == 8 && signedness == mlir::IntegerType::Unsigned) {
-                return "C";  // char
-            } else if (width == 16) {
-                return "S";  // short
-            } else if (width == 32) {
-                return "I";  // int
-            } else if (width == 64) {
-                return "J";  // long
+                return "Z";// boolean
+            }
+            if (width == 8 && signedness == mlir::IntegerType::Signed) {
+                return "B";// byte
+            }
+            if (width == 8 && signedness == mlir::IntegerType::Unsigned) {
+                return "C";// char
+            }
+            if (width == 16) {
+                return "S";// short
+            }
+            if (width == 32) {
+                return "I";// int
+            }
+            if (width == 64) {
+                return "J";// long
             }
         }
 
         // Check for Float32
         if (mlir::isa<mlir::Float32Type>(type)) {
-            return "F";  // float
+            return "F";// float
         }
 
         // Check for Float64
         if (mlir::isa<mlir::Float64Type>(type)) {
-            return "D";  // double
+            return "D";// double
         }
 
         // Check for your custom DVMObjectType
         if (mlir::isa<::mlir::shuriken::MjolnIR::DVMObjectType>(type)) {
-            return "L";  // object
+            return "L";// object
         }
 
-        return "";  // default case
+        return "";// default case
     }
 
     std::string get_dalviktype_from_mlir_type(mlir::Type type) {
@@ -89,28 +99,33 @@ namespace {
             unsigned width = intType.getWidth();
             auto signedness = intType.getSignedness();
             if (width == 1) {
-                return "Z";  // boolean
-            } else if (width == 8 && signedness == mlir::IntegerType::Signed) {
-                return "B";  // byte
-            } else if (width == 8 && signedness == mlir::IntegerType::Unsigned) {
-                return "C";  // char
-            } else if (width == 16) {
-                return "S";  // short
-            } else if (width == 32) {
-                return "I";  // int
-            } else if (width == 64) {
-                return "J";  // long
+                return "Z";// boolean
+            }
+            if (width == 8 && signedness == mlir::IntegerType::Signed) {
+                return "B";// byte
+            }
+            if (width == 8 && signedness == mlir::IntegerType::Unsigned) {
+                return "C";// char
+            }
+            if (width == 16) {
+                return "S";// short
+            }
+            if (width == 32) {
+                return "I";// int
+            }
+            if (width == 64) {
+                return "J";// long
             }
         }
 
         // Check for Float32
         if (mlir::isa<mlir::Float32Type>(type)) {
-            return "F";  // float
+            return "F";// float
         }
 
         // Check for Float64
         if (mlir::isa<mlir::Float64Type>(type)) {
-            return "D";  // double
+            return "D";// double
         }
 
         if (mlir::isa<::mlir::shuriken::MjolnIR::DVMVoidType>(type)) {
@@ -131,7 +146,7 @@ namespace {
 
         return "ERROR";
     }
-}
+}// namespace
 
 namespace shuriken::MjolnIR {
     /// INFO: MJOLNIR
@@ -140,7 +155,7 @@ namespace shuriken::MjolnIR {
         vrc.clean_counter();
 
         // extract the whole method information
-        auto method_name = op.getName().data();
+        const auto *method_name = op.getName().data();
         auto parameter_types = op.getArgumentTypes();
         auto ret_type = op.getResultTypes();
 
@@ -187,16 +202,16 @@ namespace shuriken::MjolnIR {
 
         std::stringstream parameters;
         parameters << "(";
-        for (auto parameter_type : parameter_types)
+        for (auto parameter_type: parameter_types)
             parameters << ::get_dalviktype_from_mlir_type(parameter_type);
         parameters << ")";
 
 
-        SmaliLine prologue_line = fmt::format(".method {} {}{}{}", 
-            p.str(),
-            method_name, 
-            parameters.str(), 
-            ::get_dalviktype_from_mlir_type(ret_type[0]));
+        SmaliLine prologue_line = fmt::format(".method {} {}{}{}",
+                                              p.str(),
+                                              method_name,
+                                              parameters.str(),
+                                              ::get_dalviktype_from_mlir_type(ret_type[0]));
 
 
         SmaliLines prologue = {prologue_line};
@@ -207,7 +222,8 @@ namespace shuriken::MjolnIR {
         auto operands = op.getOperands();
         if (operands.size() == 0) {
             return "return";
-        } else if (operands.size() == 1) {
+        }
+        if (operands.size() == 1) {
             return fmt::format("return {}", get_smali_value(operands[0]));
         }
         std::cerr << "Returning more than 1 operand, which is an impossible variant\n";
@@ -218,51 +234,49 @@ namespace shuriken::MjolnIR {
 
     SmaliLine MjolnIRToSmali::from_mjolnir_loadfield(LoadFieldOp lfop) {
         auto access_type = lfop.getAccessType();
-        auto field_name = lfop.getFieldName().data();
-        auto field_class = lfop.getFieldClass().data();
+        const auto *field_name = lfop.getFieldName().data();
+        const auto *field_class = lfop.getFieldClass().data();
         auto return_value = lfop.getResult();
 
         if (access_type == FieldAccessType::STATIC) {
-            return fmt::format("sget{} {}, {}->{}:{}", 
-                ::get_suffix_field_instr(return_value), 
-                get_smali_value(return_value),
-                field_class,
-                field_name,
-                ::get_type_for_field(return_value));
-        } else {
-            auto instance_register = get_smali_value(lfop.getInstance());
-            return fmt::format("iget{} {}, {}, {}->{}:{}",
-                ::get_suffix_field_instr(return_value),
-                get_smali_value(return_value),
-                instance_register,
-                field_class,
-                field_name,
-                ::get_type_for_field(return_value));
+            return fmt::format("sget{} {}, {}->{}:{}",
+                               ::get_suffix_field_instr(return_value),
+                               get_smali_value(return_value),
+                               field_class,
+                               field_name,
+                               ::get_type_for_field(return_value));
         }
+        auto instance_register = get_smali_value(lfop.getInstance());
+        return fmt::format("iget{} {}, {}, {}->{}:{}",
+                           ::get_suffix_field_instr(return_value),
+                           get_smali_value(return_value),
+                           instance_register,
+                           field_class,
+                           field_name,
+                           ::get_type_for_field(return_value));
     }
 
-    SmaliLine MjolnIRToSmali::from_mjolnir_storefield(StoreFieldOp sfop) { 
+    SmaliLine MjolnIRToSmali::from_mjolnir_storefield(StoreFieldOp sfop) {
         auto access_type = sfop.getAccessType();
-        auto field_name = sfop.getFieldName().data();
-        auto field_class = sfop.getFieldClass().data();
+        const auto *field_name = sfop.getFieldName().data();
+        const auto *field_class = sfop.getFieldClass().data();
         auto stored_value = sfop.getValue();
 
         if (access_type == FieldAccessType::STATIC) {
             return fmt::format("sput{} {}, {}->{}:{}",
-                ::get_suffix_field_instr(stored_value),
-                get_smali_value(stored_value),
-                field_class, field_name,
-                ::get_type_for_field(stored_value));
-        } else {
-            auto instance_register = get_smali_value(sfop.getInstance());
-            return fmt::format("iput{} {}, {}, {}->{}:{}",
-                ::get_suffix_field_instr(stored_value),
-                get_smali_value(stored_value), instance_register,
-                field_class, field_name,
-                ::get_type_for_field(stored_value));
+                               ::get_suffix_field_instr(stored_value),
+                               get_smali_value(stored_value),
+                               field_class, field_name,
+                               ::get_type_for_field(stored_value));
         }
+        auto instance_register = get_smali_value(sfop.getInstance());
+        return fmt::format("iput{} {}, {}, {}->{}:{}",
+                           ::get_suffix_field_instr(stored_value),
+                           get_smali_value(stored_value), instance_register,
+                           field_class, field_name,
+                           ::get_type_for_field(stored_value));
     }
-    
+
     SmaliLine MjolnIRToSmali::from_mjolnir_loadvalue(LoadValue) { return ""; }
 
 
@@ -274,48 +288,46 @@ namespace shuriken::MjolnIR {
         return fmt::format("move {}, {}", get_smali_value(dest), get_smali_value(operand));
     }
     SmaliLine MjolnIRToSmali::from_mjolnir_invoke(InvokeOp op) {
-        auto class_name = op.getClassOwner().data();
-        auto callee = op.getCallee().data();
+        const auto *class_name = op.getClassOwner().data();
+        const auto *callee = op.getCallee().data();
         auto attribute = op.getInvokeType();
         auto inputs = op.getInputs();
         auto result = op.getResults();
         bool skipFirstParameter = true;
-        
+
         std::string invoke_type;
 
-        switch (attribute)
-        {
-        case mlir::shuriken::MjolnIR::InvokeType::DIRECT:
-            invoke_type = "-direct";
-            break;
-        case mlir::shuriken::MjolnIR::InvokeType::INTERFACE:
-            invoke_type = "-interface";
-            break;
-        case mlir::shuriken::MjolnIR::InvokeType::STATIC:
-            skipFirstParameter = false;
-            invoke_type = "-static";
-            break;
-        case mlir::shuriken::MjolnIR::InvokeType::SUPER:
-            invoke_type = "-super";
-            break;
-        case mlir::shuriken::MjolnIR::InvokeType::VIRTUAL:
-            invoke_type = "-virtual";
-            break;
-        default:
-            break;
+        switch (attribute) {
+            case mlir::shuriken::MjolnIR::InvokeType::DIRECT:
+                invoke_type = "-direct";
+                break;
+            case mlir::shuriken::MjolnIR::InvokeType::INTERFACE:
+                invoke_type = "-interface";
+                break;
+            case mlir::shuriken::MjolnIR::InvokeType::STATIC:
+                skipFirstParameter = false;
+                invoke_type = "-static";
+                break;
+            case mlir::shuriken::MjolnIR::InvokeType::SUPER:
+                invoke_type = "-super";
+                break;
+            case mlir::shuriken::MjolnIR::InvokeType::VIRTUAL:
+                invoke_type = "-virtual";
+                break;
+            default:
+                break;
         }
-
 
 
         std::string parameters;
         std::string parameterTypes;
         parameters = "{";
-        parameterTypes = "(";        
+        parameterTypes = "(";
         int i = 0;
-        for (auto input : inputs) {
+        for (auto input: inputs) {
             parameters += get_smali_value(input);
-            parameters +=  ",";
-            if (i==0 && skipFirstParameter) {
+            parameters += ",";
+            if (i == 0 && skipFirstParameter) {
                 i++;
                 continue;
             }
@@ -327,7 +339,7 @@ namespace shuriken::MjolnIR {
         parameterTypes += ")";
 
         std::string ret_type = result.size() == 0 ? "V" : ::get_dalviktype_from_mlir_type(result[0].getType());
-        
+
         std::string move_result;
 
         if (result.size() != 0)
@@ -339,9 +351,9 @@ namespace shuriken::MjolnIR {
     SmaliLine MjolnIRToSmali::from_mjolnir_new(NewOp no) {
         auto ret_value = no.getResult();
         auto ret_value_type = mlir::dyn_cast<::mlir::shuriken::MjolnIR::DVMObjectType>(ret_value.getType());
-        auto cls_value = ret_value_type.getValue().data();
-        
-        return fmt::format("new-instance {}, L{};", get_smali_value(ret_value), cls_value); 
+        const auto *cls_value = ret_value_type.getValue().data();
+
+        return fmt::format("new-instance {}, L{};", get_smali_value(ret_value), cls_value);
     }
     SmaliLine MjolnIRToSmali::from_mjolnir_getarray(GetArrayOp) { return ""; }
 

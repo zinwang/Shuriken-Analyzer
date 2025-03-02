@@ -24,7 +24,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction22c *instr)
         case DexOpcodes::opcodes::OP_IGET_BYTE:
         case DexOpcodes::opcodes::OP_IGET_CHAR:
         case DexOpcodes::opcodes::OP_IGET_SHORT: {
-            auto field = std::get<FieldID *>(instr->get_checked_id_as_kind());
+            auto *field = std::get<FieldID *>(instr->get_checked_id_as_kind());
             auto regB_value = readVariable(current_basic_block, current_method->get_basic_blocks(), regB);
 
             std::string_view field_name = field->field_name();
@@ -49,7 +49,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction22c *instr)
         case DexOpcodes::opcodes::OP_IPUT_BYTE:
         case DexOpcodes::opcodes::OP_IPUT_CHAR:
         case DexOpcodes::opcodes::OP_IPUT_SHORT: {
-            auto field = std::get<FieldID *>(instr->get_checked_id_as_kind());
+            auto *field = std::get<FieldID *>(instr->get_checked_id_as_kind());
             auto regA_value = readVariable(current_basic_block, current_method->get_basic_blocks(), regA);
             auto regB_value = readVariable(current_basic_block, current_method->get_basic_blocks(), regB);
 
