@@ -34,10 +34,9 @@ namespace {
         OptAdd(mlir::MLIRContext *context) : OpRewritePattern(context, /*benefit=*/3) {}
 
         LogicalResult matchAndRewrite(mlir::arith::AddIOp op, mlir::PatternRewriter &rewriter) const override {
-            auto rhs = op.getRhs().getDefiningOp();
+            auto *rhs = op.getRhs().getDefiningOp();
             if (llvm::isa<mlir::arith::ConstantOp>(rhs)) return success();
-            else
-                return success();
+            return success();
         }
     };
     class OptNop : public mlir::OpRewritePattern<mlir::shuriken::MjolnIR::Nop> {

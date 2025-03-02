@@ -17,7 +17,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction21c *instr)
     switch (op_code) {
         case DexOpcodes::opcodes::OP_NEW_INSTANCE: {
 
-            auto cls = std::get<DVMType *>(instr->get_source_as_kind());
+            auto *cls = std::get<DVMType *>(instr->get_source_as_kind());
 
             auto cls_type = get_type(cls);
 
@@ -48,7 +48,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction21c *instr)
         case DexOpcodes::opcodes::OP_SGET_BYTE:
         case DexOpcodes::opcodes::OP_SGET_CHAR:
         case DexOpcodes::opcodes::OP_SGET_SHORT: {
-            auto field = std::get<FieldID *>(instr->get_source_as_kind());
+            auto *field = std::get<FieldID *>(instr->get_source_as_kind());
 
             std::string_view field_name = field->field_name();
             std::string_view field_class = field->field_class()->get_raw_type();
@@ -70,7 +70,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction21c *instr)
         case DexOpcodes::opcodes::OP_SPUT_BYTE:
         case DexOpcodes::opcodes::OP_SPUT_CHAR:
         case DexOpcodes::opcodes::OP_SPUT_SHORT: {
-            auto field = std::get<FieldID *>(instr->get_source_as_kind());
+            auto *field = std::get<FieldID *>(instr->get_source_as_kind());
 
             std::string_view field_name = field->field_name();
             std::string_view field_class = field->field_class()->get_raw_type();

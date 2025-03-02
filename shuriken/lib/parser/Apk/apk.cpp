@@ -5,8 +5,8 @@
 // @file apk.cpp
 
 #include "shuriken/parser/Apk/apk.h"
-#include "shuriken/common/logger.h"
 #include "shuriken/common/extract_file.h"
+#include "shuriken/common/logger.h"
 #include "shuriken/parser/shuriken_parsers.h"
 
 #include "zip.h"

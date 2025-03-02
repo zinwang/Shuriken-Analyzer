@@ -84,7 +84,7 @@ void LinearSweepDisassembler::assign_switch_if_any(
 
         if (op_code == DexOpcodes::opcodes::OP_PACKED_SWITCH ||
             op_code == DexOpcodes::opcodes::OP_SPARSE_SWITCH) {
-            auto instr31t = reinterpret_cast<Instruction31t *>(instr.get());
+            auto *instr31t = reinterpret_cast<Instruction31t *>(instr.get());
 
             auto switch_idx = instr31t->get_address() + (instr31t->get_offset() * 2);
 

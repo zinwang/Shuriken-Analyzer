@@ -105,8 +105,7 @@ int main(int argc, char **argv) {
     }
 
     if (need_help) return 0;
-    else
-        return -1;
+    return -1;
 }
 
 void show_help(std::string &prog_name) {

@@ -16,7 +16,7 @@ void Lifter::gen_instruction(shuriken::disassembler::dex::Instruction10t *instr)
             auto offset = instr->get_offset();
             auto target_idx = instr->get_address() + (offset * 2);
 
-            auto target_block = current_method->get_basic_blocks()->get_basic_block_by_idx(target_idx);
+            auto *target_block = current_method->get_basic_blocks()->get_basic_block_by_idx(target_idx);
 
             builder.create<::mlir::cf::BranchOp>(
                     location,

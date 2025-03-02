@@ -116,12 +116,12 @@ void Analysis::_add_encoded_method(
         parser::dex::EncodedMethod *encoded_method, ClassAnalysis *new_class,
         DexDisassembler::disassembled_methods_t
                 &all_methods_instructions) {
-    auto method_id = encoded_method->getMethodID();
+    auto *method_id = encoded_method->getMethodID();
     /// now create a method analysis
     auto method_name = std::string(method_id->dalvik_name_format());
     auto &disassembled = all_methods_instructions[method_name];
     method_analyses.insert({method_name, std::make_unique<MethodAnalysis>(encoded_method, disassembled.get())});
-    auto new_method = method_analyses[method_name].get();
+    auto *new_method = method_analyses[method_name].get();
 
     new_class->add_method(new_method);
 }
@@ -156,7 +156,7 @@ void Analysis::create_xrefs() {
     log(LEVEL::MYDEBUG, "create_xref(): creating xrefs for {} dex files",
         std::to_string(parsers.size()));
 
-    for (auto parser: parsers) {
+    for (auto *parser: parsers) {
         static size_t i = 0;
         log(LEVEL::MYDEBUG, "Analyzing {} parser", std::to_string(i++));
 
@@ -200,24 +200,24 @@ void Analysis::_create_xrefs(parser::dex::ClassDef &current_class) {
 void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                                        std::string &current_class_name) {
     // Obtain the Method Analysis
-    auto current_method_analysis =
+    auto *current_method_analysis =
             method_analyses[std::string(method->getMethodID()->dalvik_name_format())].get();
 
-    auto class_analysis_working_on = class_analyses[current_class_name].get();
+    auto *class_analysis_working_on = class_analyses[current_class_name].get();
 
-    for (auto instr:
+    for (auto *instr:
          current_method_analysis->get_disassembled_method()->get_instructions()) {
         auto off = instr->get_address();
-        auto instruction = instr;
+        auto *instruction = instr;
         auto op_value =
                 static_cast<DexOpcodes::opcodes>(instr->get_instruction_opcode());
 
         // check for: `const-class` and `new-instance` instructions
         if (op_value == DexOpcodes::opcodes::OP_CONST_CLASS ||
             op_value == DexOpcodes::opcodes::OP_NEW_INSTANCE) {
-            auto const_class_new_instance =
+            auto *const_class_new_instance =
                     reinterpret_cast<disassembler::dex::Instruction21c *>(instruction);
-            auto source_dvmtype = std::get<parser::dex::DVMType *>(
+            auto *source_dvmtype = std::get<parser::dex::DVMType *>(
                     const_class_new_instance->get_source_as_kind());
 
             // check we get a TYPE from CONST_CLASS
@@ -227,7 +227,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                 source_dvmtype->get_type() != parser::dex::CLASS)
                 return;
 
-            auto dvm_class = reinterpret_cast<parser::dex::DVMClass *>(
+            auto *dvm_class = reinterpret_cast<parser::dex::DVMClass *>(
                     std::get<parser::dex::DVMType *>(
                             const_class_new_instance->get_source_as_kind()));
             auto cls_name = std::string(dvm_class->get_class_name());
@@ -236,7 +236,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
             if (cls_name == current_class_name)
                 continue;
 
-            auto oth_cls = _get_class_or_create_external(cls_name);
+            auto *oth_cls = _get_class_or_create_external(cls_name);
 
             if (oth_cls == nullptr)
                 continue;
@@ -262,13 +262,13 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
         /// Check for instructions invoke-*
         else if (DexOpcodes::opcodes::OP_INVOKE_VIRTUAL <= op_value &&
                  op_value <= DexOpcodes::opcodes::OP_INVOKE_INTERFACE) {
-            auto invoke_ =
+            auto *invoke_ =
                     reinterpret_cast<disassembler::dex::Instruction35c *>(instruction);
 
             if (invoke_->get_value_kind() != shuriken::dex::TYPES::METH)
                 continue;
 
-            auto invoked_method =
+            auto *invoked_method =
                     std::get<parser::dex::MethodID *>(invoke_->get_value());
 
             if (invoked_method->get_class()->get_type() != parser::dex::CLASS) {
@@ -278,11 +278,11 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
             }
 
             /// information of method and class called
-            auto oth_method = _resolve_method(std::string(invoked_method->dalvik_name_format()));
+            auto *oth_method = _resolve_method(std::string(invoked_method->dalvik_name_format()));
             auto cls_name =
                     std::string(reinterpret_cast<parser::dex::DVMClass *>(invoked_method->get_class())
                                         ->get_class_name());
-            auto oth_cls = _get_class_or_create_external(cls_name);
+            auto *oth_cls = _get_class_or_create_external(cls_name);
 
             if (oth_cls == nullptr)
                 continue;// an external class?
@@ -303,21 +303,21 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
         /// Check for instructions like: invoke-xxx/range
         else if (DexOpcodes::opcodes::OP_INVOKE_VIRTUAL_RANGE <= op_value &&
                  op_value <= DexOpcodes::opcodes::OP_INVOKE_INTERFACE_RANGE) {
-            auto invoke_xxx_range =
+            auto *invoke_xxx_range =
                     reinterpret_cast<disassembler::dex::Instruction3rc *>(instruction);
 
             if (invoke_xxx_range->get_kind() != shuriken::dex::TYPES::METH) {
                 continue;
             }
 
-            auto method_id = std::get<parser::dex::MethodID *>(
+            auto *method_id = std::get<parser::dex::MethodID *>(
                     invoke_xxx_range->get_index_value());
             /// information of method and class called
-            auto oth_method = _resolve_method(std::string(method_id->dalvik_name_format()));
+            auto *oth_method = _resolve_method(std::string(method_id->dalvik_name_format()));
             auto cls_name =
                     reinterpret_cast<parser::dex::DVMClass *>(method_id->get_class())
                             ->get_class_name();
-            auto oth_cls = _get_class_or_create_external(std::string(cls_name));
+            auto *oth_cls = _get_class_or_create_external(std::string(cls_name));
 
             if (oth_cls == nullptr)
                 continue;
@@ -337,7 +337,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
 
         /// Now check for string usage
         else if (op_value == DexOpcodes::opcodes::OP_CONST_STRING) {
-            auto const_string =
+            auto *const_string =
                     reinterpret_cast<disassembler::dex::Instruction21c *>(instruction);
 
             if (const_string->get_source_kind() != shuriken::dex::TYPES::STRING)
@@ -357,13 +357,13 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
         /// then those from OP_SGET to OP_SPUT_SHORT
         else if (DexOpcodes::opcodes::OP_IGET <= op_value &&
                  op_value <= DexOpcodes::opcodes::OP_IPUT_SHORT) {
-            auto op_i =
+            auto *op_i =
                     reinterpret_cast<disassembler::dex::Instruction22c *>(instruction);
 
             if (op_i->get_kind() != shuriken::dex::TYPES::FIELD)
                 continue;
 
-            auto checked_field =
+            auto *checked_field =
                     std::get<parser::dex::FieldID *>(op_i->get_checked_id_as_kind());
 
             auto operation =
@@ -371,7 +371,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                             op_value);
 
             if (operation == DexOpcodes::FIELD_READ_DVM_OPCODE) {
-                auto field_item = checked_field->get_encoded_field();
+                auto *field_item = checked_field->get_encoded_field();
                 FieldAnalysis *field_analysis = nullptr;
 
                 if (field_item != nullptr) {
@@ -381,7 +381,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                     field_analysis =
                             class_analyses[current_class_name]->get_field_analysis(field_item);
                 } else {
-                    auto external_field = get_external_field(checked_field);
+                    auto *external_field = get_external_field(checked_field);
                     class_analyses[current_class_name]->add_field_xref_read(
                             current_method_analysis, class_analysis_working_on, external_field,
                             off);
@@ -395,7 +395,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
 
             } else if (operation == DexOpcodes::FIELD_WRITE_DVM_OPCODE) {
                 // retrieve the encoded field from the FieldID
-                auto field_item = checked_field->get_encoded_field();
+                auto *field_item = checked_field->get_encoded_field();
                 FieldAnalysis *field_analysis = nullptr;
 
                 if (field_item != nullptr) {
@@ -405,7 +405,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                     field_analysis =
                             class_analyses[current_class_name]->get_field_analysis(field_item);
                 } else {
-                    auto external_field = get_external_field(checked_field);
+                    auto *external_field = get_external_field(checked_field);
                     class_analyses[current_class_name]->add_field_xref_write(
                             current_method_analysis, class_analysis_working_on, external_field,
                             off);
@@ -419,13 +419,13 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
 
         else if (DexOpcodes::opcodes::OP_SGET <= op_value &&
                  op_value <= DexOpcodes::opcodes::OP_SPUT_SHORT) {
-            auto op_s =
+            auto *op_s =
                     reinterpret_cast<disassembler::dex::Instruction21c *>(instruction);
 
             if (op_s->get_kind() != shuriken::dex::TYPES::FIELD)
                 continue;
 
-            auto checked_field =
+            auto *checked_field =
                     std::get<parser::dex::FieldID *>(op_s->get_source_as_kind());
 
             auto operation =
@@ -433,7 +433,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                             op_value);
 
             if (operation == DexOpcodes::FIELD_READ_DVM_OPCODE) {
-                auto field_item = checked_field->get_encoded_field();
+                auto *field_item = checked_field->get_encoded_field();
                 FieldAnalysis *field_analysis = nullptr;
                 if (field_item != nullptr) {
                     class_analyses[current_class_name]->add_field_xref_read(
@@ -442,7 +442,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                     field_analysis =
                             class_analyses[current_class_name]->get_field_analysis(field_item);
                 } else {
-                    auto external_field = get_external_field(checked_field);
+                    auto *external_field = get_external_field(checked_field);
                     class_analyses[current_class_name]->add_field_xref_read(
                             current_method_analysis, class_analysis_working_on, external_field,
                             off);
@@ -453,7 +453,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                                                       field_analysis, off);
             } else if (operation == DexOpcodes::FIELD_WRITE_DVM_OPCODE) {
                 // retrieve the encoded field from the FieldID
-                auto field_item = checked_field->get_encoded_field();
+                auto *field_item = checked_field->get_encoded_field();
                 FieldAnalysis *field_analysis = nullptr;
 
                 if (field_item != nullptr) {
@@ -463,7 +463,7 @@ void Analysis::_analyze_encoded_method(parser::dex::EncodedMethod *method,
                     field_analysis =
                             class_analyses[current_class_name]->get_field_analysis(field_item);
                 } else {
-                    auto external_field = get_external_field(checked_field);
+                    auto *external_field = get_external_field(checked_field);
                     class_analyses[current_class_name]->add_field_xref_write(
                             current_method_analysis, class_analysis_working_on, external_field,
                             off);
@@ -512,7 +512,7 @@ MethodAnalysis *Analysis::_resolve_method(std::string full_name) {
     }
     class_name = className;
 
-    auto classAnalysis = _get_class_or_create_external(className);
+    auto *classAnalysis = _get_class_or_create_external(className);
 
     external_methods.insert({full_name, std::make_unique<ExternalMethod>(
                                                 class_name, method_name, prototype,
@@ -554,10 +554,10 @@ MethodAnalysis *Analysis::get_method(
         std::variant<parser::dex::EncodedMethod *, ExternalMethod *> method) {
     std::string name;
     if (std::holds_alternative<parser::dex::EncodedMethod *>(method)) {
-        auto m = std::get<parser::dex::EncodedMethod *>(method);
+        auto *m = std::get<parser::dex::EncodedMethod *>(method);
         name = m->getMethodID()->dalvik_name_format();
     } else {
-        auto m = std::get<ExternalMethod *>(method);
+        auto *m = std::get<ExternalMethod *>(method);
         name = m->pretty_method_name();
     }
 
@@ -616,11 +616,11 @@ FieldAnalysis *Analysis::get_field_analysis(parser::dex::EncodedField *field) {
             field_analyses, [&](FieldAnalysis *field_analysis) -> bool {
                 if (field_analysis->is_external()) {
                     return field_analysis->get_external_field()->pretty_field_name() == field->get_field()->pretty_field();
-                } else {
-                    return field_analysis->get_encoded_field()
-                                   ->get_field()
-                                   ->pretty_field() == field->get_field()->pretty_field();
                 }
+                return field_analysis->get_encoded_field()
+                               ->get_field()
+                               ->pretty_field() == field->get_field()->pretty_field();
+               
             });
 
     if (f_it == field_analyses.end())

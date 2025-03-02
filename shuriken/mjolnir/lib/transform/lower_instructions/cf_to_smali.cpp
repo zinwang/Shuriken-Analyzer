@@ -50,7 +50,7 @@ namespace shuriken::MjolnIR {
             auto operands = op.getTrueOperands();
             auto bb_operands = true_dest->getArguments();
             auto op_it = operands.begin();
-            auto bb_op_it = bb_operands.begin();
+            auto *bb_op_it = bb_operands.begin();
             for (; op_it != operands.end() && bb_op_it != bb_operands.end(); op_it++, bb_op_it++) {
                 handling.emplace_back(fmt::format("move {}, {}", get_smali_value(*bb_op_it), get_smali_value(*op_it)));
             }
@@ -66,7 +66,7 @@ namespace shuriken::MjolnIR {
             auto operands = op.getFalseOperands();
             auto bb_operands = false_dest->getArguments();
             auto op_it = operands.begin();
-            auto bb_op_it = bb_operands.begin();
+            auto *bb_op_it = bb_operands.begin();
             for (; op_it != operands.end() && bb_op_it != bb_operands.end(); op_it++, bb_op_it++) {
                 handling.emplace_back(fmt::format("move {}, {}", get_smali_value(*bb_op_it), get_smali_value(*op_it)));
             }
@@ -78,10 +78,10 @@ namespace shuriken::MjolnIR {
     }
     SmaliLines MjolnIRToSmali::from_cf_br(cf::BranchOp op) {
         auto operands = op.getOperands();
-        auto dest = op.getDest();
+        auto *dest = op.getDest();
         auto bb_operands = dest->getArguments();
         auto op_it = operands.begin();
-        auto bb_op_it = bb_operands.begin();
+        auto *bb_op_it = bb_operands.begin();
         SmaliLines handling;
         for (; op_it != operands.end() && bb_op_it != bb_operands.end(); op_it++, bb_op_it++) {
             handling.emplace_back(fmt::format("move {}, {}", vrc.get_counter(*bb_op_it), vrc.get_counter(*op_it)));

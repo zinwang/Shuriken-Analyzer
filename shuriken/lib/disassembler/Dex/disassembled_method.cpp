@@ -95,14 +95,13 @@ std::string_view DisassembledMethod::print_method(bool print_address) {
                        [](unsigned char c) {
                            if (c == '|')
                                return ' ';
-                           else
-                               return static_cast<char>(tolower(c));
+                           return static_cast<char>(tolower(c));
                        });
         output << ".method " << access_flags_str << " ";
         output << method_id->dalvik_name_format() << '\n';
         output << ".registers " << std::to_string(n_of_registers) << '\n';
         std::uint64_t id = 0;
-        for (auto instr: instructions_raw) {
+        for (auto *instr: instructions_raw) {
             /// check the information for showing exception
             for (const auto &exception: exception_information) {
                 /// avoid printing future try-catch handlers

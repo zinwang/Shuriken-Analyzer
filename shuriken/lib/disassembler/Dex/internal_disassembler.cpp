@@ -383,13 +383,13 @@ std::vector<std::int64_t> Disassembler::determine_next(Instruction *instruction,
         std::int32_t offset = 0;
 
         if (op_code == DexOpcodes::opcodes::OP_GOTO) {
-            auto goto_instr = reinterpret_cast<Instruction10t *>(instruction);
+            auto *goto_instr = reinterpret_cast<Instruction10t *>(instruction);
             offset = goto_instr->get_offset();
         } else if (op_code == DexOpcodes::opcodes::OP_GOTO_16) {
-            auto goto_instr = reinterpret_cast<Instruction20t *>(instruction);
+            auto *goto_instr = reinterpret_cast<Instruction20t *>(instruction);
             offset = goto_instr->get_offset();
         } else if (op_code == DexOpcodes::opcodes::OP_GOTO_32) {
-            auto goto_instr = reinterpret_cast<Instruction30t *>(instruction);
+            auto *goto_instr = reinterpret_cast<Instruction30t *>(instruction);
             offset = goto_instr->get_offset();
         }
 
@@ -404,11 +404,11 @@ std::vector<std::int64_t> Disassembler::determine_next(Instruction *instruction,
 
         if (op_code >= DexOpcodes::opcodes::OP_IF_EQ &&
             op_code <= DexOpcodes::opcodes::OP_IF_LE) {
-            auto if_instr = reinterpret_cast<Instruction22t *>(instruction);
+            auto *if_instr = reinterpret_cast<Instruction22t *>(instruction);
             offset = if_instr->get_offset();
         } else if (op_code >= DexOpcodes::opcodes::OP_IF_EQZ &&
                    op_code <= DexOpcodes::opcodes::OP_IF_LEZ) {
-            auto if_instr = reinterpret_cast<Instruction21t *>(instruction);
+            auto *if_instr = reinterpret_cast<Instruction21t *>(instruction);
             offset = if_instr->get_jump_offset();
         }
 
@@ -425,18 +425,18 @@ std::vector<std::int64_t> Disassembler::determine_next(Instruction *instruction,
         std::vector<std::int64_t> x = {static_cast<std::int64_t>(curr_idx) +
                                        instruction->get_instruction_length()};
 
-        auto switch_instr = reinterpret_cast<Instruction31t *>(instruction);
+        auto *switch_instr = reinterpret_cast<Instruction31t *>(instruction);
 
         switch (switch_instr->get_type_of_switch()) {
             case PACKED_SWITCH: {
-                auto packed_switch = std::get<PackedSwitch *>(switch_instr->get_switch());
+                auto *packed_switch = std::get<PackedSwitch *>(switch_instr->get_switch());
                 const auto &targets = packed_switch->get_targets();
 
                 for (auto &target: targets)
                     x.push_back(curr_idx + target * 2);
             } break;
             case SPARSE_SWITCH: {
-                auto sparse_switch = std::get<SparseSwitch *>(switch_instr->get_switch());
+                auto *sparse_switch = std::get<SparseSwitch *>(switch_instr->get_switch());
                 const auto &keys_targets = sparse_switch->get_keys_targets();
 
                 for (auto &key_target: keys_targets)
@@ -475,7 +475,7 @@ std::int16_t Disassembler::get_conditional_jump_target(Instruction *instr) {
         case DexOpcodes::opcodes::OP_IF_GT:// "if-gt"
         case DexOpcodes::opcodes::OP_IF_LE:// "if-le"
         {
-            auto instr22t = reinterpret_cast<Instruction22t *>(instr);
+            auto *instr22t = reinterpret_cast<Instruction22t *>(instr);
             return instr22t->get_offset();
         }
         case DexOpcodes::opcodes::OP_IF_EQZ:// "if-eqz"
@@ -485,7 +485,7 @@ std::int16_t Disassembler::get_conditional_jump_target(Instruction *instr) {
         case DexOpcodes::opcodes::OP_IF_GTZ:// "if-gtz"
         case DexOpcodes::opcodes::OP_IF_LEZ:// "if-lez"
         {
-            auto instr21t = reinterpret_cast<Instruction21t *>(instr);
+            auto *instr21t = reinterpret_cast<Instruction21t *>(instr);
             return instr21t->get_jump_offset();
         }
         default:
@@ -505,15 +505,15 @@ std::int32_t Disassembler::get_unconditional_jump_target(Instruction *instr) {
 
     switch (op_code) {
         case DexOpcodes::opcodes::OP_GOTO: {
-            auto goto_instr = reinterpret_cast<Instruction10t *>(instr);
+            auto *goto_instr = reinterpret_cast<Instruction10t *>(instr);
             return goto_instr->get_offset();
         }
         case DexOpcodes::opcodes::OP_GOTO_16: {
-            auto goto16_instr = reinterpret_cast<Instruction20t *>(instr);
+            auto *goto16_instr = reinterpret_cast<Instruction20t *>(instr);
             return goto16_instr->get_offset();
         }
         case DexOpcodes::opcodes::OP_GOTO_32: {
-            auto goto32_instr = reinterpret_cast<Instruction30t *>(instr);
+            auto *goto32_instr = reinterpret_cast<Instruction30t *>(instr);
             return goto32_instr->get_offset();
         }
         default:
@@ -535,7 +535,7 @@ std::vector<exception_data_t> Disassembler::determine_exception(parser::dex::Enc
     if (!method || !method->get_code_item()->get_number_try_items())
         return {};
 
-    auto code_item = method->get_code_item();
+    auto *code_item = method->get_code_item();
 
     // retrieve all the try items with the handler
     // of the offset
@@ -559,8 +559,8 @@ std::vector<exception_data_t> Disassembler::determine_exception(parser::dex::Enc
     // now create the exceptions structure
     for (auto &off_values: h_off) {
         for (auto &values: off_values.second) {
-            auto try_value = values.first;
-            auto handler_catch = values.second;
+            auto *try_value = values.first;
+            auto *handler_catch = values.second;
 
             exception_data_t z;
 

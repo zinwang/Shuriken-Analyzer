@@ -12,9 +12,9 @@
 #include "shuriken/exceptions/invalidinstruction_exception.h"
 #include "shuriken/parser/Dex/dex_protos.h"
 #include "shuriken/parser/Dex/dex_types.h"
+#include <cassert>
 
 /// MLIR includes
-#include <cassert>
 #include <llvm/ADT/StringExtras.h>
 #include <mlir/Dialect/Arith/IR/Arith.h>
 #include <mlir/Dialect/ControlFlow/IR/ControlFlow.h>
@@ -110,15 +110,15 @@ mlir::Type Lifter::get_type(DVMClass *cls) {
 mlir::Type Lifter::get_type(DVMType *type) {
     if (type->get_type() == FUNDAMENTAL)
         return get_type(reinterpret_cast<DVMFundamental *>(type));
-    else if (type->get_type() == CLASS)
+    if (type->get_type() == CLASS)
         return get_type(reinterpret_cast<DVMClass *>(type));
-    else if (type->get_type() == ARRAY) {
+    if (type->get_type() == ARRAY) {
         DVMArray *dvm_array_p = reinterpret_cast<DVMArray *>(type);
         return ::mlir::shuriken::MjolnIR::DVMArrayType::get(&context, dvm_array_p->get_raw_type());
         // throw exceptions::LifterException("MjolnIRLIfter::get_type: type ARRAY not implemented yet...");
-    } else
+    }
 
-        throw exceptions::LifterException("MjolnIRLifter::get_type: that type is unknown or I don't know what it is...");
+    throw exceptions::LifterException("MjolnIRLifter::get_type: that type is unknown or I don't know what it is...");
 }
 
 llvm::SmallVector<mlir::Type> Lifter::gen_prototype(ProtoID *proto, bool is_static, DVMType *cls) {
@@ -132,18 +132,18 @@ llvm::SmallVector<mlir::Type> Lifter::gen_prototype(ProtoID *proto, bool is_stat
 
     /// since we have a vector of parameters
     /// it is easy peasy
-    for (auto param: proto->get_parameters())
+    for (auto *param: proto->get_parameters())
         argTypes.push_back(get_type(param));
 
     return argTypes;
 }
 
 ::mlir::shuriken::MjolnIR::MethodOp Lifter::get_method(analysis::dex::MethodAnalysis *M) {
-    auto encoded_method = M->get_encoded_method();
+    auto *encoded_method = M->get_encoded_method();
 
     auto flags = encoded_method->get_flags();
 
-    auto method = encoded_method->getMethodID();
+    auto *method = encoded_method->getMethodID();
 
     parser::dex::ProtoID *proto = method->get_prototype();
     auto name = method->get_method_name();
@@ -170,7 +170,7 @@ llvm::SmallVector<mlir::Type> Lifter::gen_prototype(ProtoID *proto, bool is_stat
 
     auto number_of_registers = encoded_method->get_code_item()->get_registers_size();
 
-    auto first_block = M->get_basic_blocks()->get_basic_block_by_idx(0);
+    auto *first_block = M->get_basic_blocks()->get_basic_block_by_idx(0);
 
     for (std::uint32_t Reg = (number_of_registers - number_of_params),/// starting index of the parameter
          Limit = (static_cast<std::uint32_t>(number_of_registers)),   /// limit value for parameters
@@ -199,7 +199,7 @@ mlir::Value Lifter::readVariableRecursive(analysis::dex::DVMBasicBlock *BB,
 
     /// because block doesn't have it add it to required.
     CurrentDef[BB].required.insert(Reg);
-    for (auto pred: BBs->predecessors(BB)) {
+    for (auto *pred: BBs->predecessors(BB)) {
         if (!CurrentDef[pred].Filled)
             gen_block(pred);
         auto Val = readVariable(pred, BBs, Reg);
@@ -227,14 +227,14 @@ void Lifter::gen_method(MethodAnalysis *method) {
     /// create the method
     auto function = get_method(method);
     /// obtain the basic blocks
-    auto bbs = method->get_basic_blocks();
+    auto *bbs = method->get_basic_blocks();
     /// update the current method
     current_method = method;
 
     /// generate the blocks for each node
     auto bb_nodes = bbs->nodes();
     for (auto it = bb_nodes.begin(); it != bb_nodes.end(); it++) {
-        auto bb = *it;
+        auto *bb = *it;
         // TODO: Need Edu for code review
         // if (it == bb_nodes.begin() || it == std::prev(bb_nodes.end()))
         //     continue;
@@ -247,7 +247,7 @@ void Lifter::gen_method(MethodAnalysis *method) {
     }
     /// now traverse each node for generating instructions
     for (auto it = bb_nodes.begin(); it != bb_nodes.end(); it++) {
-        auto bb = *it;
+        auto *bb = *it;
         // TODO: Need Edu for code review
         // if (it == bb_nodes.begin() || it == std::prev(bb_nodes.end()))
         //     continue;
@@ -257,7 +257,7 @@ void Lifter::gen_method(MethodAnalysis *method) {
         gen_block(bb);
     }
 
-    for (auto bb: bb_nodes)
+    for (auto *bb: bb_nodes)
         gen_terminators(bb);
 }
 
@@ -272,7 +272,7 @@ void Lifter::gen_block(analysis::dex::DVMBasicBlock *bb) {
     // this->log(fmt::format("Gen_Block of {}", bb->toString()));
     current_basic_block = bb;
 
-    for (auto instr: bb->get_instructions()) {
+    for (auto *instr: bb->get_instructions()) {
         try {
             auto operation = InstructionUtils::get_operation_type_from_opcode(static_cast<DexOpcodes::opcodes>(instr->get_instruction_opcode()));
             /// we will generate terminators later
@@ -301,7 +301,7 @@ void Lifter::gen_block(analysis::dex::DVMBasicBlock *bb) {
 void Lifter::gen_terminators(DVMBasicBlock *bb) {
     current_basic_block = bb;
 
-    auto last_instr = bb->get_instructions().back();
+    auto *last_instr = bb->get_instructions().back();
 
     builder.setInsertionPointToEnd(map_blocks[bb]);
     try {
@@ -313,7 +313,7 @@ void Lifter::gen_terminators(DVMBasicBlock *bb) {
             gen_instruction(last_instr);
         else {
 
-            auto next_block = current_method->get_basic_blocks()->get_basic_block_by_idx(
+            auto *next_block = current_method->get_basic_blocks()->get_basic_block_by_idx(
                     last_instr->get_address() + last_instr->get_instruction_length());
             auto loc = mlir::FileLineColLoc::get(&context, module_name, last_instr->get_address(), 1);
             builder.create<::mlir::shuriken::MjolnIR::FallthroughOp>(

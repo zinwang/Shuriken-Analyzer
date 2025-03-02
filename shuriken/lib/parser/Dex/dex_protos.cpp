@@ -68,7 +68,7 @@ DVMType *ProtoID::get_return_type() {
 std::string_view ProtoID::get_dalvik_prototype() {
     if (prototypes_dalvik_representation.empty()) {
         prototypes_dalvik_representation = "(";
-        for (auto parameter: parameters) {
+        for (auto *parameter: parameters) {
             prototypes_dalvik_representation += parameter->get_raw_type();
         }
         prototypes_dalvik_representation += ")";
@@ -125,7 +125,7 @@ void DexProtos::to_xml(std::ofstream &xml_file) {
         xml_file << "\t<proto>\n";
 
         xml_file << "\t\t<parameters>\n";
-        for (auto param: protoid->get_parameters()) {
+        for (auto *param: protoid->get_parameters()) {
             xml_file << "\t\t\t<parameter>\n";
             xml_file << "\t\t\t\t<type>" << param->print_type() << "</type>\n";
             xml_file << "\t\t\t\t<raw>" << param->print_type() << "</raw>\n";

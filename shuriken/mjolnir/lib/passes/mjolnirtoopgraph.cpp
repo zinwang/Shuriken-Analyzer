@@ -111,7 +111,7 @@ namespace {
      */
         void runOnOperation() override {
             emitGraph([&]() { 
-                auto op = getOperation();
+                auto *op = getOperation();
                 processFunction(op); 
                 emitAllEdgeStmts(op); });
         }
@@ -262,7 +262,7 @@ namespace {
 
             for (auto &region: func->getRegions()) {
                 for (auto &block: region.getBlocks()) {
-                    auto terminator_instr = block.getTerminator();
+                    auto *terminator_instr = block.getTerminator();
                     auto terminator_node = instrToNode.at(terminator_instr);
 
                     if (auto cb = llvm::dyn_cast<mlir::cf::CondBranchOp>(terminator_instr)) {
@@ -286,7 +286,7 @@ namespace {
                         os << "v" << instrToNode.at(&dest_block_insns).id;
                         os << "[style=\"solid,bold\",color=blue,weight=10,constraint=true];\n";
                     } else if (auto bi = llvm::dyn_cast<mlir::BranchOpInterface>(terminator_instr)) {
-                        for (auto successor: bi.getOperation()->getSuccessors()) {
+                        for (auto *successor: bi.getOperation()->getSuccessors()) {
                             auto &dest_block_insns = successor->getOperations().front();
 
                             os << "v" << terminator_node.id;

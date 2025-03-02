@@ -105,7 +105,7 @@ namespace {
             method_core_api->instructions = new hdvminstruction_t[method_core_api->n_of_instructions];
 
             i = 0;
-            for (auto instruction: disassembled_method->get_instructions()) {
+            for (auto *instruction: disassembled_method->get_instructions()) {
                 fill_dex_instruction(instruction, &method_core_api->instructions[i++]);
             }
 
@@ -123,7 +123,7 @@ namespace {
         dvmdisassembled_method_t *return_or_create_disassembled_method_internal(apk_opaque_struct_t *opaque_struct, std::string_view method_name) {
             // if it was previously created
             if (opaque_struct->disassembled_methods.contains(method_name)) return opaque_struct->disassembled_methods[method_name];
-            auto disassembled_method = opaque_struct->apk->get_global_disassembler()->get_disassembled_method(method_name);
+            auto *disassembled_method = opaque_struct->apk->get_global_disassembler()->get_disassembled_method(method_name);
             if (disassembled_method == nullptr) return nullptr;
             auto *method = new dvmdisassembled_method_t;
             fill_dex_disassembled_method(opaque_struct, disassembled_method, method);
@@ -152,12 +152,12 @@ namespace {
             // allocate memory for the blocks
             bbs->blocks = new hdvmbasicblock_t[bbs->n_of_blocks];
             // get the disassembled instructions of the method to
-            auto instructions_structure =
+            auto *instructions_structure =
                     return_or_create_disassembled_method_internal(opaque_struct, methodAnalysis->get_full_name());
             // now create all the data in the blocks
             int i = 0;
             auto nodes = methodAnalysis->get_basic_blocks()->nodes();
-            for (auto node: nodes) {
+            for (auto *node: nodes) {
                 bbs->blocks[i].name = node->get_name().data();
                 bbs->blocks[i].try_block = node->is_try_block() ? 1 : 0;
                 bbs->blocks[i].catch_block = node->is_catch_block() ? 1 : 0;
@@ -187,7 +187,7 @@ namespace {
         /// @param encoded_method method from the internal library
         /// @param method structure for the C core API to fill data
         void fill_dex_method(shuriken::parser::dex::EncodedMethod *encoded_method, hdvmmethod_t *method) {
-            const auto method_id = encoded_method->getMethodID();
+            auto *const method_id = encoded_method->getMethodID();
 
             method->class_name = method_id->get_class()->get_raw_type().data();
             method->method_name = method_id->get_method_name().data();
@@ -208,8 +208,8 @@ namespace {
         /// @param encoded_field field from the internal library
         /// @param field structure for the C core API to fill data
         void fill_dex_field(shuriken::parser::dex::EncodedField *encoded_field, hdvmfield_t *field) {
-            auto field_id = encoded_field->get_field();
-            auto field_type = field_id->field_type();
+            auto *field_id = encoded_field->get_field();
+            auto *field_type = field_id->field_type();
 
             field->class_name = field_id->field_class()->get_raw_type().data();
             field->name = field_id->field_name().data();
@@ -221,15 +221,15 @@ namespace {
 
             if (type == shuriken::parser::dex::FUNDAMENTAL) {
                 field->type = FUNDAMENTAL;
-                auto fundamental = dynamic_cast<shuriken::parser::dex::DVMFundamental *>(field_type);
+                auto *fundamental = dynamic_cast<shuriken::parser::dex::DVMFundamental *>(field_type);
                 field->fundamental_value = static_cast<hfundamental_e>(fundamental->get_fundamental_type());
             } else if (type == shuriken::parser::dex::CLASS) {
                 field->type = CLASS;
             } else if (type == shuriken::parser::dex::ARRAY) {
                 field->type = ARRAY;
-                auto array = reinterpret_cast<shuriken::parser::dex::DVMArray *>(field_type);
+                auto *array = reinterpret_cast<shuriken::parser::dex::DVMArray *>(field_type);
                 if (array->get_array_base_type()->get_type() == shuriken::parser::dex::FUNDAMENTAL) {
-                    const auto fundamental = reinterpret_cast<
+                    const auto *const fundamental = reinterpret_cast<
                             const shuriken::parser::dex::DVMFundamental *>(array->get_array_base_type());
                     field->fundamental_value = static_cast<hfundamental_e>(fundamental->get_fundamental_type());
                 }
@@ -244,8 +244,8 @@ namespace {
         /// @return pointer to a newly created hdvmclass_t
         hdvmclass_t *fill_new_hdvmclass_t(shuriken::parser::dex::ClassDef &class_def, apk_opaque_struct_t *opaque_struct) {
             hdvmclass_t *new_class = new hdvmclass_t;
-            auto class_idx = class_def.get_class_idx();
-            auto super_class = class_def.get_superclass();
+            auto *class_idx = class_def.get_class_idx();
+            auto *super_class = class_def.get_superclass();
             auto &class_data_item = class_def.get_class_data_item();
 
             new_class->class_name = class_idx->get_class_name().data();
@@ -295,12 +295,12 @@ namespace {
             for (auto dex_file: dex_files) {
                 opaque_struct->dex_files.emplace_back(dex_file);
                 opaque_struct->headers_by_dex.insert({dex_file.data(), nullptr});
-                auto parser = working_apk->get_parser_by_file(dex_file.data());
+                auto *parser = working_apk->get_parser_by_file(dex_file.data());
                 auto &classes = parser->get_classes();
                 // Add the classes from the parser
                 for (auto &ref_class_def: classes.get_classdefs_vector()) {
                     auto &class_def = ref_class_def.get();
-                    auto hdvmclass = fill_new_hdvmclass_t(class_def, opaque_struct);
+                    auto *hdvmclass = fill_new_hdvmclass_t(class_def, opaque_struct);
                     opaque_struct->classes_by_dex[dex_file.data()].emplace_back(hdvmclass);
                 }
             }
@@ -328,8 +328,8 @@ namespace {
                 return opaque_struct->headers_by_dex.at(dex_file);
             }
 
-            auto working_header = new dexheader_t{};
-            auto parser = opaque_struct->apk->get_parser_by_file(dex_file);
+            auto *working_header = new dexheader_t{};
+            auto *parser = opaque_struct->apk->get_parser_by_file(dex_file);
             auto encoded_header = parser->get_header().get_dex_header();
 
             memcpy(working_header->magic, encoded_header.magic, 8);
@@ -400,7 +400,7 @@ namespace {
         /// @brief get or create a hdvmfieldanalysis_t structure given a FieldAnalysis object
         hdvmfieldanalysis_t *get_field_analysis(apk_opaque_struct_t *opaque_struct,
                                                 FieldAnalysis *fieldAnalysis) {
-            auto full_name = fieldAnalysis->get_name().data();
+            const auto *full_name = fieldAnalysis->get_name().data();
             auto full_name_str = std::string(full_name);
             if (opaque_struct->field_analyses.contains(full_name_str))
                 return opaque_struct->field_analyses[full_name_str];
@@ -636,7 +636,7 @@ namespace {
             auto &all_method_analysis = opaque_struct->apk->get_global_analysis()->get_methods();
             for (auto &name_method: all_method_analysis) {
                 auto &m_analysis = name_method.second.get();
-                auto hdvmmethodanalysis = get_method_analysis(opaque_struct, &m_analysis);
+                auto *hdvmmethodanalysis = get_method_analysis(opaque_struct, &m_analysis);
                 opaque_struct->method_analyses_v.emplace_back(hdvmmethodanalysis);
             }
             return opaque_struct->method_analyses_v;
@@ -646,7 +646,7 @@ namespace {
     namespace destroyers {
         void destroy_string_analysis(apk_opaque_struct_t *dex_opaque_struct) {
             for (auto str_str_analysis: dex_opaque_struct->string_analysis) {
-                auto str_analysis = str_str_analysis.second;
+                auto *str_analysis = str_str_analysis.second;
                 if (dex_opaque_struct->created_xrefs) {
                     delete[] str_analysis->xreffrom;
                 }
@@ -658,7 +658,7 @@ namespace {
 
         void destroy_field_analysis(apk_opaque_struct_t *dex_opaque_struct) {
             for (auto &name_field_analysis: dex_opaque_struct->field_analyses) {
-                auto field_analysis = name_field_analysis.second;
+                auto *field_analysis = name_field_analysis.second;
                 if (dex_opaque_struct->created_xrefs) {
                     delete[] field_analysis->xrefread;
                     delete[] field_analysis->xrefwrite;
@@ -671,7 +671,7 @@ namespace {
 
         void destroy_method_analysis(apk_opaque_struct_t *dex_opaque_struct) {
             for (auto &name_method_analysis: dex_opaque_struct->method_analyses) {
-                auto method_analysis = name_method_analysis.second;
+                auto *method_analysis = name_method_analysis.second;
                 if (method_analysis->basic_blocks) {
                     if (method_analysis->basic_blocks->blocks) {
                         delete[] method_analysis->basic_blocks->blocks;
@@ -696,7 +696,7 @@ namespace {
 
         void destroy_class_analysis(apk_opaque_struct_t *dex_opaque_struct) {
             for (auto &name_class_analysis: dex_opaque_struct->class_analyses) {
-                auto class_analysis = name_class_analysis.second;
+                auto *class_analysis = name_class_analysis.second;
                 delete[] class_analysis->methods;
                 delete[] class_analysis->fields;
                 if (dex_opaque_struct->created_xrefs) {
@@ -766,7 +766,7 @@ namespace {
         void destroy_opaque_struct(apk_opaque_struct_t *opaque_struct) {
             // destroy opaque_struct->classes_by_dex
             for (auto &dex_file_classes: opaque_struct->classes_by_dex) {
-                for (auto clazz: dex_file_classes.second) {
+                for (auto *clazz: dex_file_classes.second) {
                     destroy_class_data(clazz);
                     delete clazz;
                 }
@@ -889,7 +889,7 @@ hdvmclassanalysis_t *get_analyzed_class_from_apk(hApkContext context, const char
     auto *opaque_struct = reinterpret_cast<apk_opaque_struct_t *>(context);
     if (!opaque_struct || opaque_struct->tag != APK_TAG) return nullptr;
     std::string dalvik_name = class_name;
-    auto cls = opaque_struct->apk->get_global_analysis()->get_class_analysis(dalvik_name);
+    auto *cls = opaque_struct->apk->get_global_analysis()->get_class_analysis(dalvik_name);
     if (cls == nullptr) return nullptr;
     return ::getters::get_class_analysis(opaque_struct, cls);
 }
@@ -903,7 +903,7 @@ hdvmmethodanalysis_t *get_analyzed_method_from_apk(hApkContext context, const ch
     auto *opaque_struct = reinterpret_cast<apk_opaque_struct_t *>(context);
     if (!opaque_struct || opaque_struct->tag != APK_TAG) return nullptr;
     std::string dalvik_name = method_full_name;
-    auto method = opaque_struct->apk->get_global_analysis()->get_method_analysis_by_name(dalvik_name);
+    auto *method = opaque_struct->apk->get_global_analysis()->get_method_analysis_by_name(dalvik_name);
     if (method == nullptr) return nullptr;
     return ::getters::get_method_analysis(opaque_struct, method);
 }
