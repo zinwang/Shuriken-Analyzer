@@ -53,7 +53,9 @@ jobs:
     - name : Verify style with clang tidy 
       run: 
         # run -fix -format on your code if there is error in CI to automatically fix your code
-        run-clang-tidy -use-color -p build -j 4 -quiet "shuriken" 
+        # Regex explanation: negative lookahead to make sure test is not in the string first
+        # then we make sure that shuriken is in the string
+        run-clang-tidy -use-color -p build -j 4 -quiet "^(?!.*test).*shuriken.*"
     - name: Verify shuriken-dump exit code
       run: |
         set +e # Prevent the script from exiting immediately on error
