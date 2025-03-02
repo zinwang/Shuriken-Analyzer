@@ -29,11 +29,13 @@ jobs:
     - name: Setup compiler on Linux
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang-18 clang-tidy libtinfo5
-        echo "CC=clang-18" >> $GITHUB_ENV
-        echo "CXX=clang++-18" >> $GITHUB_ENV
+        sudo apt-get install -y libtinfo5
+        # We supply the tooling for mlir project via setup_llvm_tools
+        #    this includes the compiler as well as clang-tidy
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
     - name: Display compiler version
-      run: $CC --version
+      run: clang++ --version
     - name: Install cmake
       run: sudo apt-get install cmake
     - name: Install git
