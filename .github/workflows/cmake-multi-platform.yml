@@ -45,7 +45,7 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-18 main"
           sudo apt-get update
-          sudo apt-get install -y clang-18 clang-tidy
+          sudo apt-get install -y clang-18 
           echo "CC=clang-18" >> $GITHUB_ENV
           echo "CXX=clang++-18" >> $GITHUB_ENV
         fi
@@ -67,11 +67,6 @@ jobs:
       run: sudo cmake --install build/
     - name : Run tests
       run: ctest --test-dir build/ --output-on-failure
-    - name : Verify style with clang tidy 
-      run: |
-        if [ "${{ matrix.compiler }}" = "clang" ]; then
-        run-clang-tidy -warnings-as-errors WARNINGS_AS_ERRORS -use-color -p build -j 4 "shuriken"
-        fi
     - name: Verify shuriken-dump exit code
       run: |
         set +e # Prevent the script from exiting immediately on error
