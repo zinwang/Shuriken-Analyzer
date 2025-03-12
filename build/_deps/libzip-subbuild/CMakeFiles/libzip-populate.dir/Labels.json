@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/CMakeFiles/libzip-populate"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/CMakeFiles/libzip-populate.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/CMakeFiles/libzip-populate-complete.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-build.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-configure.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-download.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-install.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-patch.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-test.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-subbuild/libzip-populate-prefix/src/libzip-populate-stamp/libzip-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"libzip-populate"
+		],
+		"name" : "libzip-populate"
+	}
+}

@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/CMakeFiles/extern_spdlog-populate"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/CMakeFiles/extern_spdlog-populate.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/CMakeFiles/extern_spdlog-populate-complete.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-build.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-configure.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-download.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-install.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-patch.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-test.rule"
+		},
+		{
+			"file" : "/home/jensen/lab/Shuriken-Analyzer/build/_deps/extern_spdlog-subbuild/extern_spdlog-populate-prefix/src/extern_spdlog-populate-stamp/extern_spdlog-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"extern_spdlog-populate"
+		],
+		"name" : "extern_spdlog-populate"
+	}
+}

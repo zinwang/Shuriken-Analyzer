@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/in-memory.dir/link.d "CMakeFiles/in-memory.dir/in-memory.c.o" -o in-memory  -Wl,-rpath,/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-build/lib ../lib/libzip.so.5.5

@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/zipcmp.dir/link.d CMakeFiles/zipcmp.dir/zipcmp.c.o CMakeFiles/zipcmp.dir/diff_output.c.o -o zipcmp  -Wl,-rpath,/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-build/lib: ../lib/libzip.so.5.5 ../../zlib-build/libz.a

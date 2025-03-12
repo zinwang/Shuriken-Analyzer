@@ -1,0 +1,1 @@
+/usr/bin/cc -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/zipmerge.dir/link.d CMakeFiles/zipmerge.dir/zipmerge.c.o -o zipmerge  -Wl,-rpath,/home/jensen/lab/Shuriken-Analyzer/build/_deps/libzip-build/lib: ../lib/libzip.so.5.5
